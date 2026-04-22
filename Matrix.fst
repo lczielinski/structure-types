@@ -11,10 +11,10 @@ assume type sq_mat : pos -> shape -> diagonal -> Type
 
 (* augmenters *)
 assume val destruct_lower_unitdiag : #n:pos{n >= 2} -> sq_mat n Lower UnitDiag ->
-    cvec (n-1) * sq_mat (n-1) Lower UnitDiag
+    cvec (n - 1) * sq_mat (n - 1) Lower UnitDiag
 
 assume val augment_lower_unitdiag : #n:pos{n >= 2} -> 
-    sq_mat (n-1) Lower UnitDiag -> cvec (n-1) -> sq_mat n Lower UnitDiag
+    sq_mat (n - 1) Lower UnitDiag -> cvec (n - 1) -> sq_mat n Lower UnitDiag
 
 (* destructing then augmenting recovers the original matrix *)
 assume val augment_destruct_inv : #n:pos{n >= 2} -> l:sq_mat n Lower UnitDiag ->
@@ -40,7 +40,10 @@ assume val mat_mul : #n:pos -> sq_mat n Lower UnitDiag ->
 assume val mat_vec_mul_assoc : #n:pos ->
     m1:sq_mat n Lower UnitDiag -> m2:sq_mat n Lower UnitDiag -> v:cvec n ->
     Lemma (ensures mat_vec_mul (mat_mul m1 m2) v == mat_vec_mul m1 (mat_vec_mul m2 v))
-    [SMTPat (mat_vec_mul (mat_mul m1 m2) v)]
+    [SMTPatOr [
+       [SMTPat (mat_vec_mul (mat_mul m1 m2) v)];
+       [SMTPat (mat_vec_mul m1 (mat_vec_mul m2 v))]
+    ]]
 
 (* multiplying augmented matrices *)
 assume val mat_mul_augment : #n:pos{n >= 2} ->

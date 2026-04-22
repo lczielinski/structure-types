@@ -24,10 +24,10 @@ assume val mul_identity_l (#n:pos) (m:sq_mat n Lower UnitDiag) :
     [SMTPat (mat_mul identity m)]
 
 (* augment id with zero vec *)
-assume val augment_identity_zero : #n:pos{n >= 2} ->
-    Lemma (ensures augment_lower_unitdiag (identity #(n-1)) (zero_cvec (n-1)) 
+assume val augment_identity_zero : #n:pos{n >= 2} -> 
+    Lemma (ensures augment_lower_unitdiag identity zero_cvec 
         == identity #n)
-    [SMTPat (augment_lower_unitdiag #n (identity #(n-1)) (zero_cvec (n-1)))]
+    [SMTPat (augment_lower_unitdiag #n identity zero_cvec)]
 
 (* id mul with vec *)
 assume val mat_vec_mul_identity : #n:pos -> v:cvec n ->

@@ -13,7 +13,6 @@ let rec triangular_inv (#n:pos) (l:sq_mat n Lower UnitDiag)
     | _ ->
         let c, l' = destruct_lower_unitdiag l in
         let l'_inv = triangular_inv l' in
-        mat_vec_mul_assoc l' l'_inv c;
-        augment_lower_unitdiag l'_inv (neg (mat_vec_mul l'_inv c))
+        let b = neg (mat_vec_mul l'_inv c) in
+        augment_lower_unitdiag #n l'_inv b
 #pop-options
-// try pattern matching
