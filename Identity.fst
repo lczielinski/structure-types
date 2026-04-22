@@ -6,12 +6,13 @@ open Matrix
 assume val identity : #n:pos -> sq_mat n Lower UnitDiag
 
 (* inverses *)
-unfold let is_inverse (#n:pos) (l r : sq_mat n Lower UnitDiag) : Type0 =
+let is_inverse (#n:pos) (l r : sq_mat n Lower UnitDiag) =
     mat_mul r l == identity /\ mat_mul l r == identity
 
 (* 1x1 unit diag matrix is the identity *)
-assume val one_by_one_is_identity (l:sq_mat 1 Lower UnitDiag) :
+assume val one_by_one_is_identity (l: sq_mat 1 Lower UnitDiag) :
     Lemma (ensures l == identity)
+    [SMTPat (is_inverse l l)]
 
 (* mul by id *)
 assume val mul_identity_r (#n:pos) (m:sq_mat n Lower UnitDiag) :
@@ -23,10 +24,10 @@ assume val mul_identity_l (#n:pos) (m:sq_mat n Lower UnitDiag) :
     [SMTPat (mat_mul identity m)]
 
 (* augment id with zero vec *)
-assume val augment_identity_zero : #n:pos ->
-    Lemma (ensures augment_lower_unitdiag (identity #n) (zero_cvec n) 
-        == identity #(n + 1))
-    [SMTPat (augment_lower_unitdiag (identity #n) (zero_cvec n))]
+assume val augment_identity_zero : #n:pos{n >= 2} ->
+    Lemma (ensures augment_lower_unitdiag (identity #(n-1)) (zero_cvec (n-1)) 
+        == identity #n)
+    [SMTPat (augment_lower_unitdiag #n (identity #(n-1)) (zero_cvec (n-1)))]
 
 (* id mul with vec *)
 assume val mat_vec_mul_identity : #n:pos -> v:cvec n ->
