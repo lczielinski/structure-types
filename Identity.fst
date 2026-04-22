@@ -3,23 +3,23 @@ module Identity
 open Vector
 open Matrix
 
-assume val identity : #n:pos -> sq_mat n Lower UnitDiag
+assume val identity : #n:pos -> unit_lower n
 
 (* inverses *)
-let is_inverse (#n:pos) (l r : sq_mat n Lower UnitDiag) =
+let is_inverse (#n:pos) (l r : unit_lower n) : prop =
     mat_mul r l == identity /\ mat_mul l r == identity
 
 (* 1x1 unit diag matrix is the identity *)
-assume val one_by_one_is_identity (l: sq_mat 1 Lower UnitDiag) :
+assume val one_by_one_is_identity (l: unit_lower 1) :
     Lemma (ensures l == identity)
     [SMTPat (is_inverse l l)]
 
 (* mul by id *)
-assume val mul_identity_r (#n:pos) (m:sq_mat n Lower UnitDiag) :
+assume val mul_identity_r (#n:pos) (m:unit_lower n) :
     Lemma (ensures mat_mul m identity == m)
     [SMTPat (mat_mul m identity)]
 
-assume val mul_identity_l (#n:pos) (m:sq_mat n Lower UnitDiag) :
+assume val mul_identity_l (#n:pos) (m:unit_lower n) :
     Lemma (ensures mat_mul identity m == m)
     [SMTPat (mat_mul identity m)]
 
