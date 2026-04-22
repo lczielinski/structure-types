@@ -1,50 +1,5 @@
 module Structure
 
-(* scalars *)
-type num = | R | NNZ | Pos
-assume type scalar : num -> Type
-
-let num_compat (specific general : num) : bool =
-    general = R || specific = general ||
-    (specific = Pos && general = NNZ)
-
-assume val coerce_scalar : #n1:num -> #n2:num{num_compat n1 n2} ->
-    scalar n1 -> scalar n2
-
-// could do refinement type: 
-
-(* vectors *)    
-assume type cvec : pos -> Type
-assume type rvec : pos -> Type
-
-(* matrices *)
-type shape = | AnyShape | Upper | Lower | Diagonal
-type diagonal = | AnyDiag | UnitDiag | NNZDiag | PosDiag
-type property = | AnyProp | RowSDD | SPD
-    
-let shape_compat (specific general : shape) (n : pos) : bool =
-    general = AnyShape || specific = general || n = 1 ||
-    (specific = Diagonal && (general = Upper || general = Lower))
-    
-let diag_compat (specific general : diagonal) (p : property) : bool =
-    general = AnyDiag || specific = general ||
-    (specific = UnitDiag && (general = NNZDiag || general = PosDiag)) ||
-    (specific = PosDiag && general = NNZDiag) ||
-    ((p = RowSDD || p = SPD) && general = NNZDiag) ||
-    (p = SPD && general = PosDiag)
-    
-let prop_compat (specific general : property) (n : pos) : bool =
-    general = AnyProp || specific = general || n = 1
-    
-assume type sq_mat : pos -> shape -> diagonal -> property -> Type
-    
-(* matrix subtyping *)
-assume val coerce : #n:pos ->
-    #s1:shape -> #s2:shape{shape_compat s1 s2 n} ->
-    #p1:property -> #p2:property{prop_compat p1 p2 n} ->
-    #d1:diagonal -> #d2:diagonal{diag_compat d1 d2 p1} ->
-    sq_mat n s1 d1 p1 -> sq_mat n s2 d2 p2
-    
 (* destructors *)
 assume val destruct_nnzdiag : #n:pos -> #s:shape -> #p:property ->
     sq_mat (n + 1) s NNZDiag p ->

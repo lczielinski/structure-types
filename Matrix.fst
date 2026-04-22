@@ -1,18 +1,13 @@
 module Matrix
 
 open Vector
+open MatrixType
 
-assume type mat : pos -> Type
-
-assume val lower : #n:pos -> mat n -> prop
-assume val unit_diag : #n:pos -> mat n -> prop
-
-let unit_lower (n:pos) = m:mat n {lower m /\ unit_diag m}
-
-(* augmenters *)
+(* destructors *)
 assume val destruct_lower_unitdiag : #n:pos{n >= 2} -> unit_lower n ->
     cvec (n - 1) & unit_lower (n - 1)
 
+(* augmenters *)
 assume val augment_lower_unitdiag : #n:pos{n >= 2} -> 
     unit_lower (n - 1) -> cvec (n - 1) -> unit_lower n
 

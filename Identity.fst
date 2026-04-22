@@ -2,6 +2,7 @@ module Identity
 
 open Vector
 open Matrix
+open MatrixType
 
 assume val identity : #n:pos -> unit_lower n
 
