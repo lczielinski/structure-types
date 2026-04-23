@@ -1,31 +1,9 @@
 module Structure
 
-(* destructors *)
-assume val destruct_nnzdiag : #n:pos -> #s:shape -> #p:property ->
-    sq_mat (n + 1) s NNZDiag p ->
-    cvec n * scalar NNZ * rvec n * sq_mat n s NNZDiag p
-
-assume val destruct_posdiag : #n:pos -> #s:shape -> #p:property ->
-    sq_mat (n + 1) s PosDiag p ->
-    cvec n * scalar Pos * rvec n * sq_mat n s PosDiag p
-  
 (* preserves SDD and SPD *)
 assume val schur1 : #n:pos -> #s:shape -> #d:diagonal -> #p:property ->
     sq_mat (n + 1) s d p -> sq_mat n s AnyDiag p
 // would need to know a fact about it
-
-(* augment *)
-assume val augment_lower_unitdiag : #n:pos -> #p:property ->
-    sq_mat n Lower UnitDiag p -> cvec n ->
-    sq_mat (n + 1) Lower UnitDiag AnyProp
-
-assume val augment_lower_posdiag : #n:pos -> #p:property ->
-    sq_mat n Lower PosDiag p -> cvec n -> scalar Pos -> 
-    sq_mat (n + 1) Lower PosDiag AnyProp
-
-assume val augment_upper_nnzdiag : #n:pos -> #p:property ->
-    sq_mat n Upper NNZDiag p -> scalar NNZ -> rvec n ->
-    sq_mat (n + 1) Upper NNZDiag AnyProp
 
 (* scalars *)
 assume val extract_scalar : #s:shape -> #p:property ->

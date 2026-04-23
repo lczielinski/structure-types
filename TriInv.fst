@@ -1,6 +1,8 @@
 module TriInv
 
+open Scalar
 open Vector
+open MatrixType
 open Matrix
 open Identity
 
@@ -11,8 +13,8 @@ let rec triangular_inv (#n:pos) (l:unit_lower n)
     match n with
     | 1 -> l
     | _ ->
-        let c, l' = destruct_lower_unitdiag l in
+        let c, l' = destruct_unit_lower l in
         let l'_inv = triangular_inv l' in
         let b = neg (mat_vec_mul l'_inv c) in
-        augment_lower_unitdiag l'_inv b
+        augment_unit_lower l'_inv b
 #pop-options
