@@ -28,16 +28,22 @@ let one = num_of One
 
 assume val one_const : one
 
-assume val scalar_mul : #k:num_kind -> num_of k -> num_of k -> num_of k
+let mul (k1 k2 : num_kind) : num_kind =
+    match k1, k2 with
+    | One, k | k, One -> k
+    | Pos, Pos -> Pos
+    | _ -> Nnz
+
+assume val scalar_mul : #k1:num_kind -> #k2:num_kind ->
+    num_of k1 -> num_of k2 -> num_of (mul k1 k2)
 
 assume val scalar_mul_one_r : #k:num_kind -> r:num_of k -> o:one ->
     Lemma (ensures scalar_mul r o == r)
     [SMTPat (scalar_mul r o)]
 
 assume val scalar_mul_one_l : #k:num_kind -> r:num_of k -> o:one ->
-    Lemma (ensures scalar_mul #k o r == r)
-    [SMTPat (scalar_mul #k o r)]
+    Lemma (ensures scalar_mul o r == r)
+    [SMTPat (scalar_mul o r)]
 
-assume val one_unique : o1:one -> o2:one->
-    Lemma (ensures o1 == o2)
-    [SMTPat o1; SMTPat o2]
+assume val one_unique : o1:one -> o2:one ->
+    Lemma (ensures o1 == o2) [SMTPat o1; SMTPat o2]

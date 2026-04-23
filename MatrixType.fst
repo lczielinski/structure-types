@@ -46,6 +46,7 @@ let upper_of (k:num_kind) (n:pos) = m:mat n{_upper m /\ diag_pred k m}
 let unit_lower = lower_of One
 let pos_lower = lower_of Pos
 let nnz_lower = lower_of Nnz
+
 let diagonal (n:pos) = m:mat(n){_lower m /\ _upper m}
 let spd (n:pos) = m:mat(n){_spd m}
 let rowsdd (n:pos) = m:mat(n){_rowsdd m}

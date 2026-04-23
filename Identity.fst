@@ -18,21 +18,20 @@ assume val one_by_one_is_identity : l:unit_lower(1) ->
 
 (* mul by id *)
 assume val mul_identity_r : #k:num_kind -> #n:pos -> m:lower_of k (n) ->
-    Lemma (ensures mul_lower #k #n m (identity #n) == m)
-    [SMTPat (mul_lower #k #n m (identity #n))]
+    Lemma (ensures mul_lower m identity == m)
+    [SMTPat (mul_lower m identity)]
 
 assume val mul_identity_l : #k:num_kind -> #n:pos -> m:lower_of k (n) ->
-    Lemma (ensures mul_lower #k #n (identity #n) m == m)
-    [SMTPat (mul_lower #k #n (identity #n) m)]
+    Lemma (ensures mul_lower #k identity m == m)
+    [SMTPat (mul_lower #k identity m)]
 
 (* augment id with zero vec *)
 assume val augment_identity_zero : #m:pos -> #n:pos -> o:one ->
     Lemma (requires n = m + 1)
-          (ensures augment_lower #One #n (identity #m) (zero_cvec #m) o
-                   == identity #n)
+          (ensures augment_lower #One #n identity zero_cvec o == identity)
     [SMTPat (augment_lower #One #n (identity #m) (zero_cvec #m) o)]
 
 (* id mul with vec *)
-assume val mat_vec_mul_identity : #k:num_kind -> #n:pos -> v:cvec n ->
-    Lemma (ensures mat_vec_mul #k #n (identity #n) v == v)
-    [SMTPat (mat_vec_mul #k #n (identity #n) v)]
+assume val mat_vec_mul_identity : #n:pos -> v:cvec n ->
+    Lemma (ensures mat_vec_mul identity v == v)
+    [SMTPat (mat_vec_mul identity v)]
