@@ -3,32 +3,49 @@ module Vector
 open Scalar
 
 assume type cvec : pos -> Type
+assume type rvec : pos -> Type
+
+(* zero vector *)
+assume val zero_cvec : #n:pos -> cvec(n) -> prop
+assume val zero_rvec : #n:pos -> rvec(n) -> prop
+
+assume val _zero_cvec : #n:pos -> c:cvec(n){zero_cvec c}
+assume val _zero_rvec : #n:pos -> r:rvec(n){zero_rvec r}
+
+assume val zero_cvec_unique : #n:pos -> c:cvec(n) ->
+    Lemma (requires zero_cvec c) (ensures c == _zero_cvec #n)
+    [SMTPat (zero_cvec c)]
+
+assume val zero_rvec_unique : #n:pos -> r:rvec(n) ->
+    Lemma (requires zero_rvec r) (ensures r == _zero_rvec #n)
+    [SMTPat (zero_rvec r)]
+
+(* adding vectors *)
+assume val cvec_add : #n:pos -> c1:cvec(n) -> c2:cvec(n) -> c3:cvec(n) {
+    (zero_cvec c1 ==> c3 == c2) /\ (zero_cvec c2 ==> c3 == c1)
+}
 
 (* negate a vector *)
 assume val neg : #n:pos -> cvec(n) -> cvec(n)
 
-assume val vec_add : #n:pos -> cvec(n) -> cvec(n) -> cvec(n)
+assume val neg_involutive : #n:pos -> c:cvec(n) ->
+    Lemma (neg (neg c) == c) [SMTPat (neg (neg c))]
 
-assume val zero_cvec : #n:pos -> cvec(n)
+assume val neg_zero : #n:pos -> c:cvec(n) ->
+    Lemma (requires zero_cvec c) (ensures zero_cvec (neg c))
+    [SMTPat (neg c)]
 
-assume val vec_add_neg_r : #n:pos -> v:cvec(n) ->
-    Lemma (ensures vec_add v (neg v) == zero_cvec)
-    [SMTPat (vec_add v (neg v))]
+assume val cvec_add_neg_r : #n:pos -> c:cvec(n) ->
+    Lemma (zero_cvec (cvec_add c (neg c)))
+    [SMTPat (cvec_add c (neg c))]
 
-assume val vec_add_neg_l : #n:pos -> v:cvec(n) ->
-    Lemma (ensures vec_add (neg v) v == zero_cvec)
-    [SMTPat (vec_add (neg v) v)]
+assume val cvec_add_neg_l : #n:pos -> c:cvec(n) ->
+    Lemma (zero_cvec (cvec_add (neg c) c))
+    [SMTPat (cvec_add (neg c) c)]
 
-assume val vec_add_zero_r : #n:pos -> v:cvec(n) ->
-    Lemma (ensures vec_add v zero_cvec == v)
-    [SMTPat (vec_add v zero_cvec)]
-
-assume val vec_add_zero_l : #n:pos -> v:cvec(n) ->
-    Lemma (ensures vec_add zero_cvec v == v)
-    [SMTPat (vec_add zero_cvec v)]
-
+(* vector-scalar mul *)
 assume val vec_scalar_mul : #n:pos -> cvec(n) -> num -> cvec(n)
 
-assume val vec_scalar_mul_one : #n:pos -> v:cvec n -> o:one ->
-    Lemma (ensures vec_scalar_mul v o == v)
-    [SMTPat (vec_scalar_mul v o)]
+assume val vec_scalar_mul_one : #n:pos -> c:cvec(n) -> a:num ->
+    Lemma (requires one a) (ensures vec_scalar_mul c a == c)
+    [SMTPat (vec_scalar_mul c a)]

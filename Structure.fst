@@ -19,17 +19,7 @@ assume val sqrt : scalar Pos -> scalar Pos
 val lu : #n:pos -> sq_mat n AnyShape NNZDiag RowSDD ->
     sq_mat n Lower UnitDiag AnyProp * sq_mat n Upper NNZDiag AnyProp
 
-let rec lu #n m =
-    if n = 1 then
-        (coerce singleton_unit, coerce m)
-    else
-        let (c, a, b, _) = destruct_nnzdiag #(n - 1) m in
-        let s  = schur1 m in
-        let (l, u) = lu (coerce s) in
-        let d  = col_div c a in
-        let l' = augment_lower_unitdiag l d in
-        let u' = augment_upper_nnzdiag u a b in
-        (l', u')
+
 
 (* Cholesky *)
 val cholesky : #n:pos -> sq_mat n AnyShape PosDiag SPD ->

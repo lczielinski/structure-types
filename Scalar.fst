@@ -2,48 +2,24 @@ module Scalar
 
 assume type num : Type
 
-assume val _nnz : num -> prop
-assume val _pos : num -> prop
-assume val _one : num -> prop
+assume val nnz : num -> prop
+assume val posr : num -> prop
+assume val one : num -> prop
 
-assume val pos_is_nnz : r:num ->
-    Lemma (requires _pos r) (ensures _nnz r) [SMTPat (_pos r)]
+assume val pos_is_nnz : a:num ->
+    Lemma (requires posr a) (ensures nnz a) [SMTPat (posr a)]
 
-assume val one_is_pos : r:num ->
-    Lemma (requires _one r) (ensures _pos r) [SMTPat (_one r)]
+assume val one_is_pos : a:num ->
+    Lemma (requires one a) (ensures posr a) [SMTPat (one a)]
 
-type num_kind = | Nnz | Pos | One
+assume val scalar_mul : a1:num -> a2:num -> a3:num {
+    (one a1 ==> a3 == a2) /\ (one a2 ==> a3 == a1) /\
+    (posr a1 /\ posr a2 ==> posr a3) /\
+    (nnz a1 /\ nnz a2 ==> nnz a3)
+}
 
-let pred_of (k:num_kind) : num -> prop =
-  match k with
-  | Nnz -> _nnz
-  | Pos -> _pos
-  | One -> _one
+assume val _one : a:num{one a}
 
-let num_of (k:num_kind) = r:num{pred_of k r}
-
-let nnz = num_of Nnz
-let posr = num_of Pos
-let one = num_of One
-
-assume val one_const : one
-
-let mul (k1 k2 : num_kind) : num_kind =
-    match k1, k2 with
-    | One, k | k, One -> k
-    | Pos, Pos -> Pos
-    | _ -> Nnz
-
-assume val scalar_mul : #k1:num_kind -> #k2:num_kind ->
-    num_of k1 -> num_of k2 -> num_of (mul k1 k2)
-
-assume val scalar_mul_one_r : #k:num_kind -> r:num_of k -> o:one ->
-    Lemma (ensures scalar_mul r o == r)
-    [SMTPat (scalar_mul r o)]
-
-assume val scalar_mul_one_l : #k:num_kind -> r:num_of k -> o:one ->
-    Lemma (ensures scalar_mul o r == r)
-    [SMTPat (scalar_mul o r)]
-
-assume val one_unique : o1:one -> o2:one ->
-    Lemma (ensures o1 == o2) [SMTPat o1; SMTPat o2]
+assume val one_unique : a:num ->
+  Lemma (requires one a) (ensures a == _one)
+  [SMTPat (one a)]
