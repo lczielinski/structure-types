@@ -2,35 +2,31 @@ module Scalar
 
 assume type num : Type
 
-assume val nnz : num -> prop
-assume val posr : num -> prop
-assume val one : num -> prop
-assume val zero : num -> prop
+assume val _one  : num
+assume val _zero : num
 
-assume val pos_is_nnz : a:num ->
-    Lemma (requires posr a) (ensures nnz a) [SMTPat (posr a)]
+assume val posr : num -> prop
+
+let one  (a:num) : prop = a == _one
+let zero (a:num) : prop = a == _zero
+let nnz  (a:num) : prop = ~(zero a)
 
 assume val one_is_pos : a:num ->
-    Lemma (requires one a) (ensures posr a) [SMTPat (one a)]
+  Lemma (requires one a) (ensures posr a) [SMTPat (one a)]
 
-assume val scalar_mul : a1:num -> a2:num -> a3:num {
-    (one a1 ==> a3 == a2) /\ (one a2 ==> a3 == a1) /\
-    (posr a1 /\ posr a2 ==> posr a3) /\
-    (nnz a1 /\ nnz a2 ==> nnz a3)
+assume val pos_is_nnz : a:num ->
+  Lemma (requires posr a) (ensures nnz a) [SMTPat (posr a)]
+
+assume val scalar_mul : a1:num -> a2:num -> a3:num{
+  (one a1 ==> a3 == a2) /\
+  (one a2 ==> a3 == a1) /\
+  (posr a1 /\ posr a2 ==> posr a3) /\
+  (nnz  a1 /\ nnz  a2 ==> nnz  a3) /\
+  (zero a1 \/ zero a2 ==> zero a3)
 }
 
-assume val scalar_add : a1:num -> a2:num -> a3:num {
-    (zero a1 ==> a2 == a3) /\
-    (zero a2 ==> a1 == a3) /\
-    (posr a1 /\ posr a2 ==> posr a3)
+assume val scalar_add : a1:num -> a2:num -> a3:num{
+  (zero a1 ==> a2 == a3) /\
+  (zero a2 ==> a1 == a3) /\
+  (posr a1 /\ posr a2 ==> posr a3)
 }
-
-assume val _one : a:num{one a}
-assume val one_unique : a:num ->
-  Lemma (requires one a) (ensures a == _one)
-  [SMTPat (one a)]
-
-assume val _zero : a:num{zero a}
-assume val zero_unique : a:num ->
-  Lemma (requires zero a) (ensures a == _zero)
-  [SMTPat (zero a)]
