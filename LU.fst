@@ -4,18 +4,20 @@ open Scalar
 open Vector
 open MatrixType
 open Matrix
+open Schur
 
-let rec lu (#n:pos) (m:spd(n)) :
-  l:unit_lower(n) & u:pos_upper(n) =
-  magic()
-
-    // if n = 1 then
-    //     (coerce singleton_unit, coerce m)
-    // else
-    //     let (c, a, b, _) = destruct_nnzdiag #(n - 1) m in
-    //     let s  = schur1 m in
-    //     let (l, u) = lu (coerce s) in
-    //     let d  = col_div c a in
-    //     let l' = augment_lower_unitdiag l d in
-    //     let u' = augment_upper_nnzdiag u a b in
-    //     (l', u')
+#push-options "--z3rlimit 100 --split_queries no"
+let rec lu (#n:pos) (m:mat(n){spd m}) :
+  l:mat(n){unit_lower l} & 
+  u:mat(n){upper u /\ mat_mul l u == m} =
+  match n with
+  | 1 -> (|_id_mat #1, m|)
+  | _ -> 
+    let (|c, a, b, d|) = destruct m in
+    let s = schur1 d c a b in
+    let (|l, u|) = lu s in
+    let lc = vec_scalar_div c a in
+    let l' = augment l lc _one _zero_rvec in
+    let u' = augment u _zero_cvec a b in
+    (|l', u'|)
+#pop-options

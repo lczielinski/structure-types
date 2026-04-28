@@ -7,8 +7,8 @@ open Matrix
 
 (* triangular inverse function *)
 #push-options "--split_queries always"
-let rec triangular_inv (#n:pos) (l:mat(n){unit_lower l})
-   : r:mat(n){unit_lower r /\ is_inverse l r} =
+let rec triangular_inv (#n:pos) (l:mat(n){unit_lower l}) :
+    r:mat(n){unit_lower r /\ is_inverse l r} =
     match n with
     | 1 -> l
     | _ -> 
