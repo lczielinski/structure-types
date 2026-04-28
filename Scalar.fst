@@ -21,7 +21,8 @@ assume val scalar_mul : a1:num -> a2:num -> a3:num {
 
 assume val scalar_add : a1:num -> a2:num -> a3:num {
     (zero a1 ==> a2 == a3) /\
-    (zero a2 ==> a1 == a3)
+    (zero a2 ==> a1 == a3) /\
+    (posr a1 /\ posr a2 ==> posr a3)
 }
 
 assume val _one : a:num{one a}

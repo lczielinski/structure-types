@@ -4,7 +4,6 @@ open Scalar
 open Vector
 open MatrixType
 open Matrix
-open Schur
 
 #push-options "--z3rlimit 100 --split_queries no"
 let rec lu (#n:pos) (m:mat(n){spd m}) :

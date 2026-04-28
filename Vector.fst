@@ -15,12 +15,11 @@ let cvec (n:pos) = c:vec(n){col c}
 assume val zero_vec : #n:pos -> vec(n) -> prop
 
 assume val _zero_cvec : #n:pos -> c:cvec(n){zero_vec c}
-assume val _zero_rvec : #n:pos -> r:rvec(n){zero_vec r}
-
 assume val zero_cvec_unique : #n:pos -> c:cvec(n) ->
     Lemma (requires zero_vec c) (ensures c == _zero_cvec #n)
     [SMTPat (zero_vec c)]
 
+assume val _zero_rvec : #n:pos -> r:rvec(n){zero_vec r}
 assume val zero_rvec_unique : #n:pos -> r:rvec(n) ->
     Lemma (requires zero_vec r) (ensures r == _zero_rvec #n)
     [SMTPat (zero_vec r)]
@@ -42,19 +41,13 @@ assume val vec_add : #n:pos -> v1:vec(n) ->
 assume val neg : #n:pos -> v1:vec(n) -> v2:vec(n) {
     (col v1 ==> col v2) /\
     (row v1 ==> row v2) /\
-    (zero_vec v1 ==> zero_vec v2)
+    (zero_vec v1 ==> zero_vec v2) /\
+    zero_vec (vec_add v1 v2) /\
+    zero_vec (vec_add v2 v1)
 }
 
 assume val neg_involutive : #n:pos -> v:vec(n) ->
     Lemma (neg (neg v) == v) [SMTPat (neg (neg v))]
-
-assume val vec_add_neg_r : #n:pos -> v:vec(n) ->
-    Lemma (zero_vec (vec_add v (neg v)))
-    [SMTPat (vec_add v (neg v))]
-
-assume val vec_add_neg_l : #n:pos -> v:vec(n) ->
-    Lemma (zero_vec (vec_add (neg v) v))
-    [SMTPat (vec_add (neg v) v)]
 
 (* vector-scalar mul *)
 assume val vec_scalar_mul : #n:pos -> v1:vec(n) -> a:num -> v2:vec(n) {
@@ -73,11 +66,3 @@ assume val vec_scalar_div : #n:pos -> v1:vec n -> a:num{nnz a} -> v2:vec n {
 assume val inner_prod : #n:pos -> r:rvec(n) -> c:cvec(n) -> a:num {
     zero_vec r \/ zero_vec c ==> zero a
 }
-
-assume val zero_vec_zero_cvec : #n:pos ->
-  Lemma (zero_vec (_zero_cvec #n))
-  [SMTPat (zero_vec (_zero_cvec #n))]
-
-assume val zero_vec_zero_rvec : #n:pos ->
-  Lemma (zero_vec (_zero_rvec #n))
-  [SMTPat (zero_vec (_zero_rvec #n))]

@@ -10,13 +10,8 @@ assume val lower : #n:pos -> mat(n) -> prop
 assume val upper : #n:pos -> mat(n) -> prop
 let diagonal (#n:pos) (m:mat(n)) : prop = lower m /\ upper m
 
-assume val one_by_one_lower : m:mat(1) ->
-    Lemma (ensures lower m)
-    [SMTPat (lower m)]
-
-assume val one_by_one_upper : m:mat(1) ->
-    Lemma (ensures upper m)
-    [SMTPat (upper m)]
+assume val one_by_one_lower : m:mat(1) -> Lemma (lower m) [SMTPat (lower m)]
+assume val one_by_one_upper : m:mat(1) -> Lemma (upper m) [SMTPat (upper m)]
 
 (* what's on the diagonal *)
 assume val unit_diag : #n:pos -> mat(n) -> prop
@@ -49,8 +44,7 @@ assume val id_unit_diagonal : #n:pos -> m:mat(n) ->
     Lemma (requires identity m) (ensures diagonal m /\ unit_diag m)
     [SMTPat (identity m)]
 
-assume val _id_mat : #n:pos -> m:mat(n){identity m}
-
+assume val _id_mat : #n:pos -> m:mat n {identity m /\ diagonal m /\ unit_diag m}
 assume val id_mat_unique : #n:pos -> m:mat(n) ->
     Lemma (requires identity m) (ensures m == _id_mat)
     [SMTPat (identity m)]
@@ -59,7 +53,6 @@ assume val id_mat_unique : #n:pos -> m:mat(n) ->
 assume val zero_mat : #n:pos -> mat(n) -> prop
 
 assume val _zero_mat : #n:pos -> m:mat(n){zero_mat m}
-
 assume val zero_mat_unique : #n:pos -> m:mat(n) ->
     Lemma (requires zero_mat m) (ensures m == _zero_mat)
-     [SMTPat (identity m)]
+    [SMTPat (zero_mat m)]
