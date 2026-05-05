@@ -51,15 +51,16 @@ assume val mat_vec_mul_neg : #n:pos -> m:mat n -> c:cvec n ->
   Lemma (mat_vec_mul m (neg c) == neg (mat_vec_mul m c))
         [SMTPat (mat_vec_mul m (neg c))]
 
-(* 1x1 unit diag matrix is the identity *)
-assume val one_by_one_is_identity : l:mat 1 ->
-  Lemma (requires unit_diag l) (ensures identity l)
-        [SMTPat (unit_diag (l <: mat 1))]
-
 (* outer product *)
 assume val outer_prod : #n:pos -> c:cvec n -> r:rvec n -> m:mat n{
   (zero_vec c \/ zero_vec r) ==> zero_mat m
 }
+
+(* move scalar division from row factor to col factor: c ⊗ (b/l) = (c/l) ⊗ b *)
+assume val outer_prod_div_comm : #n:pos ->
+  c:cvec n -> b:rvec n -> l:num{nnz l} ->
+  Lemma (outer_prod c (vec_scalar_div b l) == outer_prod (vec_scalar_div c l) b)
+  [SMTPat (outer_prod c (vec_scalar_div b l))]
 
 (* adding matrices *)
 assume val mat_add : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n{
@@ -75,5 +76,29 @@ assume val mat_sub : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n{
 assume val schur1 : #n:pos -> d:mat n -> c:cvec n -> a:num{nnz a} -> b:rvec n ->
   s:mat n{
     s == mat_sub d (outer_prod (vec_scalar_div c a) b) /\
-    (spd (augment #(n+1) d c a b) ==> spd s)
+    (spd (augment #(n+1) d c a b) ==> spd s) /\
+    (rowsdd (augment #(n+1) d c a b) ==> rowsdd s)
   }
+
+(* transpose *)
+assume val transpose : #n:pos -> mat n -> mat n
+
+assume val transpose_involutive : #n:pos -> m:mat n ->
+  Lemma (transpose (transpose m) == m) [SMTPat (transpose (transpose m))]
+
+assume val transpose_augment : #n:pos{n >= 2} -> m:mat (n-1) -> 
+  c:cvec (n-1) -> a:num -> b:rvec (n-1) ->
+  Lemma (transpose (augment m c a b) == augment (transpose m) (trans_vec b) a (trans_vec c))
+  [SMTPat (transpose (augment m c a b))]
+
+(* symmetry *)
+let symmetric (#n:pos) (m:mat n) : prop = m == transpose m
+
+assume val destruct_symmetric : #n:pos{n >= 2} -> m:mat n ->
+  Lemma (requires symmetric m)
+        (ensures (let (|c, a, b, d|) = destruct m in
+                  trans_vec c == b /\ trans_vec b == c))
+        [SMTPat (destruct m)]
+
+assume val spd_symmetric : #n:pos -> m:mat n ->
+  Lemma (requires spd m) (ensures symmetric m) [SMTPat (spd m)]

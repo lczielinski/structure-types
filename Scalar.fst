@@ -30,3 +30,7 @@ assume val scalar_add : a1:num -> a2:num -> a3:num{
   (zero a2 ==> a1 == a3) /\
   (posr a1 /\ posr a2 ==> posr a3)
 }
+
+assume val sqrt : a1:num{posr a1} -> a2:num{
+  posr a2 /\ scalar_mul a2 a2 == a1
+}

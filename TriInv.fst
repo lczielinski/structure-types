@@ -5,6 +5,7 @@ open Vector
 open MatrixType
 open Matrix
 open MatMul
+open OneByOne
 
 (* triangular inverse function *)
 #push-options "--split_queries always"

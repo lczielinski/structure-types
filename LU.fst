@@ -5,8 +5,9 @@ open Vector
 open MatrixType
 open Matrix
 open MatMul
+open OneByOne
 
-let rec lu (#n:pos) (m:mat n{spd m}) :
+let rec lu (#n:pos) (m:mat n{rowsdd m \/ spd m}) :
   l:mat n{unit_lower l} &
   u:mat n{upper u /\ mat_mul l u == m} =
   match n with

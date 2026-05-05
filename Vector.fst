@@ -64,9 +64,25 @@ assume val vec_scalar_div : #n:pos -> v1:vec n -> a:num{nnz a} -> v2:vec n{
   vec_scalar_mul v2 a == v1
 }
 
+assume val vec_scalar_div_assoc : #n:pos -> v:vec n -> l1:num{nnz l1} -> l2:num{nnz l2} ->
+  Lemma (requires nnz (scalar_mul l1 l2))
+        (ensures vec_scalar_div (vec_scalar_div v l1) l2 == vec_scalar_div v (scalar_mul l1 l2))
+        [SMTPat (vec_scalar_div (vec_scalar_div v l1) l2)]
+
 (* inner product *)
 assume val inner_prod : #n:pos -> rvec n -> cvec n -> num
 
 assume val inner_prod_zero : #n:pos -> r:rvec n -> c:cvec n ->
   Lemma (requires zero_vec r \/ zero_vec c) (ensures zero (inner_prod r c)) 
   [SMTPat (inner_prod r c)]
+
+(* transpose vector *)
+assume val trans_vec : #n:pos -> v1:vec n -> v2:vec n{
+  (row v1 ==> col v2 ) /\
+  (col v1 ==> row v2) /\
+  (zero_vec v1 ==> zero_vec v2)
+}
+
+assume val trans_vec_scalar_div : #n:pos -> v:vec n -> a:num{nnz a} ->
+  Lemma (trans_vec (vec_scalar_div v a) == vec_scalar_div (trans_vec v) a)
+        [SMTPat (trans_vec (vec_scalar_div v a))]
