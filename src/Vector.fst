@@ -47,8 +47,7 @@ assume val neg_involutive : #n:pos -> v:vec n ->
 
 (* vector-scalar mult *)
 assume val vec_scalar_mul : #n:pos -> v1:vec n -> a:num -> v2:vec n{
-  (col v1 ==> col v2) /\
-  (row v1 ==> row v2)
+  (col v1 ==> col v2) /\ (row v1 ==> row v2)
 }
 
 assume val vec_scalar_mul_zero : #n:pos -> v:vec n -> a:num ->
@@ -64,10 +63,9 @@ assume val vec_scalar_div : #n:pos -> v1:vec n -> a:num{nnz a} -> v2:vec n{
   vec_scalar_mul v2 a == v1
 }
 
-assume val vec_scalar_div_assoc : #n:pos -> v:vec n -> l1:num{nnz l1} -> l2:num{nnz l2} ->
-  Lemma (requires nnz (scalar_mul l1 l2))
-        (ensures vec_scalar_div (vec_scalar_div v l1) l2 == vec_scalar_div v (scalar_mul l1 l2))
-        [SMTPat (vec_scalar_div (vec_scalar_div v l1) l2)]
+assume val vec_scalar_div_assoc : #n:pos -> v:vec n -> a1:num{nnz a1} -> a2:num{nnz a2} ->
+  Lemma (vec_scalar_div (vec_scalar_div v a1) a2 == vec_scalar_div v (scalar_mul a1 a2))
+        [SMTPat (vec_scalar_div (vec_scalar_div v a1) a2)]
 
 (* inner product *)
 assume val inner_prod : #n:pos -> rvec n -> cvec n -> num
@@ -78,8 +76,7 @@ assume val inner_prod_zero : #n:pos -> r:rvec n -> c:cvec n ->
 
 (* transpose vector *)
 assume val trans_vec : #n:pos -> v1:vec n -> v2:vec n{
-  (row v1 ==> col v2 ) /\
-  (col v1 ==> row v2) /\
+  (row v1 ==> col v2 ) /\ (col v1 ==> row v2) /\
   (zero_vec v1 ==> zero_vec v2)
 }
 

@@ -51,8 +51,8 @@ assume val perm : #n:pos -> mat n -> prop
 assume val perm_is_inv : #n:pos -> m:mat n ->
   Lemma (requires perm m) (ensures inv m) [SMTPat (perm m)]
 
-assume val perm_id_mat : #n:pos ->
+assume val id_mat_is_perm : #n:pos ->
   Lemma (perm (_id_mat #n)) [SMTPat (_id_mat #n)]
 
-(* top-left (1,1) entry is nonzero *)
+(* top-left entry is nonzero *)
 assume val top_left_nnz : #n:pos -> mat n -> prop

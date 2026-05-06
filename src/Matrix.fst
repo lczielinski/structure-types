@@ -14,8 +14,7 @@ assume val destruct : #n:pos{n >= 2} -> m:mat n ->
     (nnz_diag m       ==> nnz  a /\ nnz_diag  d) /\
     (top_left_nnz m   ==> nnz  a) /\
     (rowsdd m         ==> rowsdd d) /\
-    (spd m            ==> spd d /\ posr a) /\
-    (inv m /\ top_left_nnz m ==> inv d)
+    (spd m            ==> spd d /\ posr a)
   }
 
 (* augmenters *)
@@ -26,7 +25,6 @@ assume val augment : #n:pos{n >= 2} -> m:mat (n-1) ->
     (unit_diag m /\ one  a                  ==> unit_diag d) /\
     (pos_diag m  /\ posr a                  ==> pos_diag  d) /\
     (nnz_diag m  /\ nnz  a                  ==> nnz_diag  d) /\
-    (spd m       /\ posr a                  ==> spd d) /\
     (perm m      /\ zero_vec c /\ one a /\ zero_vec b ==> perm d)
   }
 
@@ -66,15 +64,13 @@ assume val outer_prod : #n:pos -> c:cvec n -> r:rvec n -> m:mat n{
 }
 
 (* outer prod of scalar div *)
-assume val outer_prod_div_comm : #n:pos ->
-  c:cvec n -> b:rvec n -> l:num{nnz l} ->
+assume val outer_prod_div_comm : #n:pos -> c:cvec n -> b:rvec n -> l:num{nnz l} ->
   Lemma (outer_prod c (vec_scalar_div b l) == outer_prod (vec_scalar_div c l) b)
   [SMTPat (outer_prod c (vec_scalar_div b l))]
 
 (* adding matrices *)
 assume val mat_add : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n{
-  (zero_mat m1 ==> m2 == m3) /\
-  (zero_mat m2 ==> m1 == m3)
+  (zero_mat m1 ==> m2 == m3) /\ (zero_mat m2 ==> m1 == m3)
 }
 
 assume val mat_sub : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n{
