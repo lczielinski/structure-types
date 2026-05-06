@@ -1,11 +1,6 @@
 module Cholesky
 
-open Scalar
-open Vector
-open MatrixType
-open Matrix
-open MatMul
-open OneByOne
+open All
 
 let rec cholesky (#n:pos) (m:mat n{spd m}) :
   l:mat n{lower l /\ pos_diag l /\ mat_mul l (transpose l) == m} =

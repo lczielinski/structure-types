@@ -1,11 +1,6 @@
 module TriInv
 
-open Scalar
-open Vector
-open MatrixType
-open Matrix
-open MatMul
-open OneByOne
+open All
 
 (* triangular inverse function *)
 #push-options "--split_queries always"

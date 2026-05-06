@@ -57,7 +57,8 @@ assume val mat_mul_perm : #n:pos -> m1:mat n -> m2:mat n ->
 
 assume val mat_mul_assoc : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n ->
   Lemma (mat_mul (mat_mul m1 m2) m3 == mat_mul m1 (mat_mul m2 m3))
-  // [SMTPat (mat_mul (mat_mul m1 m2) m3)]
+  [SMTPat (mat_mul (mat_mul m1 (transpose m2)) m3)]
+  //  SMTPat (mat_mul (mat_mul (transpose m1) m2) m3)]
 
 (* (transpose p) * (p * m) == m *)
 assume val perm_inv_l : #n:pos -> p:mat n{perm p} -> m:mat n ->

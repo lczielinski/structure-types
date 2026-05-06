@@ -1,11 +1,6 @@
 module Solve
 
-open Scalar
-open Vector
-open MatrixType
-open Matrix
-open MatMul
-open OneByOne
+open All
 open TriInv
 
 let solve (#n:pos) (l:mat n{unit_lower l}) (b:cvec n) : 

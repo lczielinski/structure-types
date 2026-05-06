@@ -1,11 +1,6 @@
 module LU
 
-open Scalar
-open Vector
-open MatrixType
-open Matrix
-open MatMul
-open OneByOne
+open All
 
 let rec lu (#n:pos) (m:mat n{rowsdd m \/ spd m}) :
   l:mat n{unit_lower l} &
