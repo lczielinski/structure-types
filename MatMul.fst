@@ -51,6 +51,35 @@ assume val mat_vec_mul_assoc : #n:pos -> m1:mat n -> m2:mat n -> c:cvec n ->
 let is_inverse (#n:pos) (l r:mat n) : prop =
   (mat_mul r l == _id_mat) /\ (mat_mul l r == _id_mat)
 
+assume val mat_mul_perm : #n:pos -> m1:mat n -> m2:mat n ->
+  Lemma (requires perm m1 /\ perm m2) (ensures perm (mat_mul m1 m2))
+  [SMTPat (perm (mat_mul m1 m2))]
+
+assume val mat_mul_assoc : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n ->
+  Lemma (mat_mul (mat_mul m1 m2) m3 == mat_mul m1 (mat_mul m2 m3))
+  // [SMTPat (mat_mul (mat_mul m1 m2) m3)]
+
+(* (transpose p) * (p * m) == m *)
+assume val perm_inv_l : #n:pos -> p:mat n{perm p} -> m:mat n ->
+  Lemma (mat_mul (transpose p) (mat_mul p m) == m)
+  [SMTPat (mat_mul (transpose p) (mat_mul p m))]
+
+assume val mat_mul_sub_distr : #n:pos -> m:mat n -> m1:mat n -> m2:mat n ->
+  Lemma (mat_mul m (mat_sub m1 m2) == mat_sub (mat_mul m m1) (mat_mul m m2))
+  [SMTPat (mat_mul m (mat_sub m1 m2))]
+
+(* m * (c ⊗ r) == (m*c) ⊗ r *)
+assume val mat_mul_outer_prod : #n:pos -> m:mat n -> c:cvec n -> r:rvec n ->
+  Lemma (mat_mul m (outer_prod c r) == outer_prod (mat_vec_mul m c) r)
+  [SMTPat (mat_mul m (outer_prod c r))]
+
+assume val transpose_perm : #n:pos -> m:mat n ->
+  Lemma (requires perm m)
+        (ensures perm (transpose m) /\
+                 mat_mul m (transpose m) == _id_mat /\
+                 mat_mul (transpose m) m == _id_mat)
+        [SMTPat (perm m)]
+
 assume val mul_augment : #n:pos{n >= 2} ->
   m1:mat (n-1) -> c1:cvec (n-1) -> a1:num -> b1:rvec (n-1) ->
   m2:mat (n-1) -> c2:cvec (n-1) -> a2:num -> b2:rvec (n-1) ->

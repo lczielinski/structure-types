@@ -38,3 +38,6 @@ assume val one_by_one_equal : m1:mat 1 -> m2:mat 1 ->
 assume val extract_mul : m1:mat 1 -> m2:mat 1 ->
   Lemma (ensures extract (mat_mul m1 m2) == scalar_mul (extract m1) (extract m2))
         [SMTPat (mat_mul m1 m2)]
+
+assume val inv_1x1_nnz_diag : m:mat 1 ->
+  Lemma (requires inv m) (ensures nnz_diag m) [SMTPat (inv (m <: mat 1))]

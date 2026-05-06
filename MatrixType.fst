@@ -24,6 +24,7 @@ assume val unit_diag_pos : #n:pos -> m:mat n ->
 (* properties *)
 assume val rowsdd : #n:pos -> mat n -> prop
 assume val spd    : #n:pos -> mat n -> prop
+assume val inv    : #n:pos -> mat n -> prop
 
 assume val spd_pos_diag : #n:pos -> m:mat n ->
   Lemma (requires spd m) (ensures pos_diag m) [SMTPat (spd m)]
@@ -43,3 +44,15 @@ let identity (#n:pos) (m:mat n) : prop = m == _id_mat
 assume val _zero_mat : #n:pos -> mat n
 
 let zero_mat (#n:pos) (m:mat n) : prop = m == _zero_mat
+
+(* permutation matrix *)
+assume val perm : #n:pos -> mat n -> prop
+
+assume val perm_is_inv : #n:pos -> m:mat n ->
+  Lemma (requires perm m) (ensures inv m) [SMTPat (perm m)]
+
+assume val perm_id_mat : #n:pos ->
+  Lemma (perm (_id_mat #n)) [SMTPat (_id_mat #n)]
+
+(* top-left (1,1) entry is nonzero *)
+assume val top_left_nnz : #n:pos -> mat n -> prop

@@ -17,6 +17,5 @@ let rec triangular_inv (#n:pos) (l:mat n{unit_lower l}) :
     let (|c, _, _, l'|) = destruct #n l in
     let l'_inv = triangular_inv l' in
     let b = neg (mat_vec_mul l'_inv c) in
-    assert (col b);
     augment l'_inv b _one _zero_rvec
 #pop-options
