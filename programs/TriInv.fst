@@ -6,11 +6,10 @@ open All
 #push-options "--split_queries always"
 let rec triangular_inv (#n:pos) (l:mat n{unit_lower l}) :
   r:mat n{unit_lower r /\ is_inverse l r} =
-  match n with
-  | 1 -> l
-  | _ ->
-    let (|c, _, _, l'|) = destruct #n l in
+  match l with
+  | Mat1 a -> l
+  | MatN l' c _ _ ->
     let l'_inv = triangular_inv l' in
-    let b = neg (mat_vec_mul l'_inv c) in
-    augment l'_inv b _one _zero_rvec
+    let b = vec_neg (mat_vec_mul l'_inv c) in
+    MatN l'_inv b one zero_rvec 
 #pop-options
