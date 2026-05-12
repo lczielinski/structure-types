@@ -59,12 +59,18 @@ assume val spd_pos_diag (#n: pos) (m: mat n) : Lemma (requires spd m) (ensures p
 assume val rowsdd_nnz_diag (#n: pos) (m: mat n)
     : Lemma (requires rowsdd m) (ensures nnz_diag m) [SMTPat (rowsdd m)]
 
+assume val destruct_rowsdd : #n: pos{n >= 2} -> m: mat n ->
+    Lemma (requires rowsdd m) (ensures (let MatN m' b a c = m in rowsdd m')) [SMTPat (rowsdd m)]
+
+assume val destruct_spd : #n: pos{n >= 2} -> m: mat n ->
+    Lemma (requires spd m) (ensures (let MatN m' b a c = m in spd m' /\ is_pos a)) [SMTPat (spd m)]
+
 (* shorthands *)
 let unit_lower (#n: pos) (m: mat n) : prop = lower m /\ unit_diag m
 
 (* identity *)
 let rec id_mat (#n: pos) : mat n =
-  if n = 1 then Mat1 one else MatN (id_mat #(n - 1)) (zero_cvec (n - 1)) one (zero_rvec (n - 1))
+  if n = 1 then Mat1 one else MatN (id_mat #(n - 1)) zero_cvec one zero_rvec
 
 let is_id (#n: pos) (m: mat n) : prop = m == id_mat
 
@@ -78,7 +84,7 @@ let rec id_mat_unit_diag (#n: pos) : Lemma (unit_diag (id_mat #n)) [SMTPat (id_m
 let rec zero_mat (#n: pos) : mat n =
   if n = 1
   then Mat1 zero
-  else MatN (zero_mat #(n - 1)) (zero_cvec (n - 1)) zero (zero_rvec (n - 1))
+  else MatN (zero_mat #(n - 1)) zero_cvec zero zero_rvec
 
 let is_zero_mat (#n: pos) (m: mat n) : prop = m == zero_mat
 
@@ -88,6 +94,9 @@ assume val perm: #n: pos -> mat n -> prop
 assume val perm_is_inv (#n: pos) (m: mat n) : Lemma (requires perm m) (ensures inv m) [SMTPat (perm m)]
 
 assume val id_mat_is_perm (#n: pos) : Lemma (perm (id_mat #n)) [SMTPat (id_mat #n)]
+
+assume val augment_perm : #n: pos -> m: mat n{perm m} ->
+  Lemma (perm (MatN m zero_vec one zero_vec)) [SMTPat (perm m)]
 
 (* top-left entry is nonzero *)
 let top_left_nnz (#n: pos) (m: mat n) : prop =

@@ -6,22 +6,6 @@ open Vector
 
 open MatrixType
 
-(* id_mat unfolds to MatN in the n>=2 case *)
-// let id_mat_MatN (#n: pos{n >= 2})
-//     : Lemma (id_mat #n == MatN (id_mat #(n - 1)) (zero_cvec (n - 1)) one (zero_rvec (n - 1)))
-//       [SMTPat (id_mat #n)] = ()
-
-// (* rowsdd and spd are abstract — state their behaviour on MatN *)
-// assume val matN_rowsdd : #n: pos -> m': mat n -> col: cvec n -> corner: num -> row: rvec n ->
-//   Lemma (rowsdd (MatN m' col corner row) ==> rowsdd m')
-
-// assume val matN_spd : #n: pos -> m': mat n -> col: cvec n -> corner: num -> row: rvec n ->
-//   Lemma (spd (MatN m' col corner row) ==> spd m' /\ is_pos corner)
-
-// assume val matN_perm : #n: pos -> m': mat n -> col: cvec n -> corner: num -> row: rvec n ->
-//   Lemma (requires perm m' /\ is_zero_vec col /\ is_one corner /\ is_zero_vec row)
-//     (ensures perm (MatN m' col corner row))
-
 (* matrix-vector mul *)
 assume val mat_vec_mul (#n: pos) (m: mat n) (c1: cvec n)
     : c2: cvec n {(is_id m ==> c1 == c2) /\ (is_zero_vec c1 ==> is_zero_vec c2)}
@@ -79,6 +63,13 @@ let rec mat_neg (#n: pos) (m: mat n) : mat n =
 let mat_sub (#n: pos) (m1 m2: mat n) : mat n = mat_add m1 (mat_neg m2)
 
 (* schur complement *)
+// let schur1 (#n: pos{n >= 2}) (m: mat n{rowsdd m}) : mat n = 
+//   match m with 
+//   | MatN #n m' c a b -> 
+//     assert (m' : mat n); 
+//     mat_sub m' (outer_prod (vec_scalar_div c a) b)
+
+
 let schur1 (#n: pos) (d: mat n) (c: cvec n) (a: num{is_nnz a}) (b: rvec n) : mat n =
   mat_sub d (outer_prod (vec_scalar_div c a) b)
 

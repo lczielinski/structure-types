@@ -3,7 +3,6 @@ module Vector
 open Scalar
 
 type orient = | Row | Col
-
 let flip (o: orient) : orient = match o with | Row -> Col | Col -> Row
 
 noeq type vec : orient -> pos -> Type =
@@ -20,8 +19,8 @@ let cvec (n: pos) : Type = vec Col n
 let rec zero_vec (#o: orient) (#n: pos) : vec o n =
   if n = 1 then Vec1 #o zero else VecN (zero_vec #o #(n - 1)) zero
 
-let zero_rvec (n: pos) : rvec n = zero_vec #Row #n
-let zero_cvec (n: pos) : cvec n = zero_vec #Col #n
+let zero_rvec (#n: pos) : rvec n = zero_vec #Row #n
+let zero_cvec (#n: pos) : cvec n = zero_vec #Col #n
 
 let is_zero_vec (#o: orient) (#n: pos) (v: vec o n) : prop = v == zero_vec #o #n
 
