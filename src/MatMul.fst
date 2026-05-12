@@ -69,9 +69,7 @@ assume val mat_mul_outer_prod : #n:pos -> m:mat n -> c:cvec n -> r:rvec n ->
 
 assume val transpose_perm : #n:pos -> m:mat n ->
   Lemma (requires perm m)
-        (ensures perm (transpose m) /\
-                 mat_mul m (transpose m) == _id_mat /\
-                 mat_mul (transpose m) m == _id_mat)
+        (ensures perm (transpose m) /\ is_inverse m (transpose m))
         [SMTPat (perm m)]
 
 assume val mul_augment : #n:pos{n >= 2} ->

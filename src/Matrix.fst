@@ -7,25 +7,25 @@ open MatrixType
 (* destructors *)
 assume val destruct : #n:pos{n >= 2} -> m:mat n ->
   c:cvec (n-1) & a:num & b:rvec (n-1) & d:mat (n-1){
-    (lower m          ==> lower d /\ zero_vec b) /\
-    (upper m          ==> upper d /\ zero_vec c) /\
-    (unit_diag m      ==> one  a /\ unit_diag d) /\
-    (pos_diag m       ==> posr a /\ pos_diag  d) /\
-    (nnz_diag m       ==> nnz  a /\ nnz_diag  d) /\
-    (top_left_nnz m   ==> nnz  a) /\
-    (rowsdd m         ==> rowsdd d) /\
-    (spd m            ==> spd d /\ posr a)
+    (lower m ==> lower d /\ zero_vec b) /\
+    (upper m ==> upper d /\ zero_vec c) /\
+    (unit_diag m ==> one a /\ unit_diag d) /\
+    (pos_diag m ==> posr a /\ pos_diag d) /\
+    (nnz_diag m ==> nnz a /\ nnz_diag d) /\
+    (top_left_nnz m ==> nnz a) /\
+    (rowsdd m ==> rowsdd d) /\
+    (spd m ==> spd d /\ posr a)
   }
 
 (* augmenters *)
 assume val augment : #n:pos{n >= 2} -> m:mat (n-1) ->
   c:cvec (n-1) -> a:num -> b:rvec (n-1) -> d:mat n{
-    (lower m     /\ zero_vec b              ==> lower d) /\
-    (upper m     /\ zero_vec c              ==> upper d) /\
-    (unit_diag m /\ one  a                  ==> unit_diag d) /\
-    (pos_diag m  /\ posr a                  ==> pos_diag  d) /\
-    (nnz_diag m  /\ nnz  a                  ==> nnz_diag  d) /\
-    (perm m      /\ zero_vec c /\ one a /\ zero_vec b ==> perm d)
+    (lower m /\ zero_vec b ==> lower d) /\
+    (upper m /\ zero_vec c ==> upper d) /\
+    (unit_diag m /\ one a ==> unit_diag d) /\
+    (pos_diag m /\ posr a ==> pos_diag d) /\
+    (nnz_diag m /\ nnz a ==> nnz_diag d) /\
+    (perm m /\ zero_vec c /\ one a /\ zero_vec b ==> perm d)
   }
 
 (* augment id with zero vec *)
@@ -78,13 +78,23 @@ assume val mat_sub : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n{
 }
 
 (* schur complement *)
-assume val schur1 : #n:pos -> d:mat n -> c:cvec n -> a:num{nnz a} -> b:rvec n ->
-  s:mat n{
-    s == mat_sub d (outer_prod (vec_scalar_div c a) b) /\
-    (spd    (augment #(n+1) d c a b) ==> spd    s) /\
-    (rowsdd (augment #(n+1) d c a b) ==> rowsdd s) /\
-    (inv    (augment #(n+1) d c a b) ==> inv    s)
-  }
+let schur1 (#n:pos) (d:mat n) (c:cvec n) (a:num{nnz a}) (b:rvec n) : mat n =
+  mat_sub d (outer_prod (vec_scalar_div c a) b)
+
+assume val schur1_spd : #n:pos -> d:mat n -> c:cvec n -> a:num{nnz a} -> b:rvec n ->
+  Lemma (requires spd (augment #(n+1) d c a b))
+        (ensures spd (schur1 d c a b))
+        [SMTPat (schur1 d c a b)]
+
+assume val schur1_rowsdd : #n:pos -> d:mat n -> c:cvec n -> a:num{nnz a} -> b:rvec n ->
+  Lemma (requires rowsdd (augment #(n+1) d c a b))
+        (ensures rowsdd (schur1 d c a b))
+        [SMTPat (schur1 d c a b)]
+
+assume val schur1_inv : #n:pos -> d:mat n -> c:cvec n -> a:num{nnz a} -> b:rvec n ->
+  Lemma (requires inv (augment #(n+1) d c a b))
+        (ensures inv (schur1 d c a b))
+        [SMTPat (schur1 d c a b)]
 
 (* transpose *)
 assume val transpose : #n:pos -> mat n -> mat n

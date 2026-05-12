@@ -56,3 +56,6 @@ assume val id_mat_is_perm : #n:pos ->
 
 (* top-left entry is nonzero *)
 assume val top_left_nnz : #n:pos -> mat n -> prop
+
+assume val nnz_diag_top_left : #n:pos -> m:mat n ->
+  Lemma (requires nnz_diag m) (ensures top_left_nnz m) [SMTPat (nnz_diag m)]
