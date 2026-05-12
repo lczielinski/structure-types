@@ -106,6 +106,13 @@ let rec vec_scalar_div_assoc (#o: orient) (#n: pos) (v: vec o n)
   | Vec1 _ -> ()
   | VecN v' _ -> vec_scalar_div_assoc v' a1 a2
 
+let rec vec_scalar_div_mul (#o: orient) (#n: pos) (v: vec o n) (a: num{is_nnz a})
+    : Lemma (vec_scalar_mul (vec_scalar_div v a) a == v)
+      [SMTPat (vec_scalar_mul (vec_scalar_div v a) a)] =
+  match v with
+  | Vec1 _ -> ()
+  | VecN v' _ -> vec_scalar_div_mul v' a
+
 (* inner product *)
 let rec inner_prod (#n: pos) (r: rvec n) (c: cvec n) : num =
   match r with

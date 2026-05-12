@@ -1,14 +1,17 @@
 module Matrix
 
 open Scalar
-
 open Vector
-
 open MatrixType
 
 (* matrix-vector mul *)
 assume val mat_vec_mul (#n: pos) (m: mat n) (c1: cvec n)
     : c2: cvec n {(is_id m ==> c1 == c2) /\ (is_zero_vec c1 ==> is_zero_vec c2)}
+// let rec mat_vec_mul (#n: pos) (m: mat n) (c: cvec n) = 
+//   match m with 
+//   | Mat1 a -> 
+//     let Vec1 c1 = c in Vec1 #Col (scalar_mul a c1)
+//   | MatN m' c a b -> magic()
 
 assume val vec_mat_mul (#n: pos) (r1: rvec n) (m: mat n)
     : r2: rvec n {(is_id m ==> r1 == r2) /\ (is_zero_vec r1 ==> is_zero_vec r2)}
@@ -57,10 +60,14 @@ let rec mat_add_zero_r (#n: pos) (m1 m2: mat n)
 let rec mat_neg (#n: pos) (m: mat n) : mat n =
   match m with
   | Mat1 a -> Mat1 (scalar_neg a)
-  | MatN m' col corner row -> MatN (mat_neg m') (vec_neg col) (scalar_neg corner) (vec_neg row)
+  | MatN m' c a b -> MatN (mat_neg m') (vec_neg c) (scalar_neg a) (vec_neg b)
 
 (* matrix subtraction *)
 let mat_sub (#n: pos) (m1 m2: mat n) : mat n = mat_add m1 (mat_neg m2)
+
+assume val mat_add_sub_cancel (#n: pos) (m1 m2: mat n)
+    : Lemma (mat_add m2 (mat_sub m1 m2) == m1)
+      [SMTPat (mat_add m2 (mat_sub m1 m2))]
 
 (* schur complement *)
 // let schur1 (#n: pos{n >= 2}) (m: mat n{rowsdd m}) : mat n = 
@@ -88,7 +95,7 @@ assume val schur1_inv (#n: pos) (d: mat n) (c: cvec n) (a: num{is_nnz a}) (b: rv
 let rec transpose (#n: pos) (m: mat n) : mat n =
   match m with
   | Mat1 a -> Mat1 a
-  | MatN m' col corner row -> MatN (transpose m') (vec_trans row) corner (vec_trans col)
+  | MatN m' c a b -> MatN (transpose m') (vec_trans b) a (vec_trans c)
 
 let rec transpose_involutive (#n: pos) (m: mat n)
     : Lemma (transpose (transpose m) == m) [SMTPat (transpose (transpose m))] =
@@ -96,13 +103,10 @@ let rec transpose_involutive (#n: pos) (m: mat n)
   | Mat1 _ -> ()
   | MatN m' _ _ _ -> transpose_involutive m'
 
-let transpose_matN (#n: pos) (m: mat n) (col: cvec n) (corner: num) (row: rvec n) : Lemma
-      (transpose (MatN m col corner row) ==
-        MatN (transpose m) (vec_trans row) corner (vec_trans col))
-      [SMTPat (transpose (MatN m col corner row))] = ()
-
 (* symmetry *)
 let symmetric (#n: pos) (m: mat n) : prop = m == transpose m
+
+assume val one_by_one_sym : m:mat 1 -> Lemma (symmetric m) [SMTPat (symmetric m)]
 
 // let matN_symmetric (#n: pos) (m: mat n) (col: cvec n) (corner: num) (row: rvec n)
 //     : Lemma (requires symmetric (MatN m col corner row))
