@@ -72,7 +72,7 @@ assume val inv_1x1_nnz_diag (m: mat 1)
 let unit_lower (#n: pos) (m: mat n) : prop = lower m /\ unit_diag m
 
 (* identity *)
-let rec id_mat (#n: pos) : mat n =
+let rec id_mat (#n: pos) : m:mat n{diagonal m /\ unit_diag m} =
   if n = 1 then Mat1 one else MatN (id_mat #(n - 1)) zero_cvec one zero_rvec
 
 let is_id (#n: pos) (m: mat n) : prop = m == id_mat
@@ -84,12 +84,6 @@ let rec zero_mat (#n: pos) : mat n =
   else MatN (zero_mat #(n - 1)) zero_cvec zero zero_rvec
 
 let is_zero_mat (#n: pos) (m: mat n) : prop = m == zero_mat
-
-let rec id_mat_diagonal (#n: pos) : Lemma (diagonal (id_mat #n)) [SMTPat (id_mat #n)] =
-  if n = 1 then () else id_mat_diagonal #(n - 1)
-
-let rec id_mat_unit_diag (#n: pos) : Lemma (unit_diag (id_mat #n)) [SMTPat (id_mat #n)] =
-  if n = 1 then () else id_mat_unit_diag #(n - 1)
 
 (* permutation matrix *)
 assume val perm: #n: pos -> mat n -> prop
