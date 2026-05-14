@@ -18,9 +18,9 @@ let rec lu_pivoting (#n:pos) (m:mat n{inv m}) :
 
     let lc = vec_scalar_div c a in
     let pd = mat_vec_mul p lc in
-    let l' = augment l pd _one _zero_rvec in
-    let u' = augment u _zero_cvec a b in
-    let p_aug = augment p _zero_cvec _one _zero_rvec in
+    let l' = augment l pd one zero_rvec in
+    let u' = augment u zero_cvec a b in
+    let p_aug = augment p zero_cvec one zero_rvec in
     let p'' = mat_mul p_aug (transpose p') in
 
     (|p'', l', u'|)

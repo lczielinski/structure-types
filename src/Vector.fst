@@ -2,68 +2,66 @@ module Vector
 
 open Scalar
 
-assume type vec : pos -> Type
+type orient = | Row | Col
+let flip (o: orient) : orient = match o with | Row -> Col | Col -> Row
 
-assume val row : #n:pos -> vec n -> prop
-let col (#n:pos) (v:vec n) : prop = ~(row v)
+// or: size function computes size of vector. use as a refinement
+noeq type vec : orient -> pos -> Type =
+  | Vec1 : #o: orient -> num -> vec o 1
+  | VecN : #o: orient -> #n: pos -> vec o n -> num -> vec o (n + 1)
 
-let rvec (n:pos) = r:vec n{row r}
-let cvec (n:pos) = c:vec n{col c}
+let row (#n: pos) (v: vec Row n) : prop = True
+let col (#n: pos) (v: vec Col n) : prop = True
 
-let vec_compat (#n:pos) (v1 v2:vec n) : prop =
-  (col v1 /\ col v2) \/ (row v1 /\ row v2)
+let rvec (n: pos) : Type = vec Row n
+let cvec (n: pos) : Type = vec Col n
 
 (* zero vector *)
-assume val _zero_cvec : #n:pos -> cvec n
-assume val _zero_rvec : #n:pos -> rvec n
+let rec zero_vec (#o: orient) (#n: pos) : vec o n =
+  if n = 1 then Vec1 #o zero else VecN (zero_vec #o #(n - 1)) zero
 
-let zero_vec (#n:pos) (v:vec n) : prop =
-  (row v /\ v == _zero_rvec #n) \/ (col v /\ v == _zero_cvec #n)
+let zero_rvec (#n: pos) : rvec n = zero_vec #Row #n
+let zero_cvec (#n: pos) : cvec n = zero_vec #Col #n
+
+let is_zero_vec (#o: orient) (#n: pos) (v: vec o n) : prop = v == zero_vec #o #n
 
 (* add vectors *)
-assume val vec_add : #n:pos -> v1:vec n -> v2:vec n{vec_compat v1 v2} -> v3:vec n{
-  (zero_vec v1 ==> v3 == v2) /\
-  (zero_vec v2 ==> v3 == v1) /\
-  (col v1 ==> col v3) /\
-  (row v1 ==> row v3)
+assume val vec_add (#o: orient) (#n: pos) (v1 v2: vec o n) : v3: vec o n {
+  (is_zero_vec v1 ==> v3 == v2) /\
+  (is_zero_vec v2 ==> v3 == v1)
 }
 
 (* negate a vector *)
-assume val neg : #n:pos -> v1:vec n -> v2:vec n{
-  (col v1 ==> col v2) /\ (row v1 ==> row v2)
-}
+assume val neg (#o: orient) (#n: pos) (v1: vec o n) : vec o n 
 
-assume val neg_zero : #n:pos -> v:vec n ->
-  Lemma (requires zero_vec v) (ensures zero_vec (neg v)) [SMTPat (neg v)]
+assume val neg_zero : #n:pos -> #o:orient -> v:vec o n ->
+  Lemma (requires is_zero_vec v) (ensures is_zero_vec (neg v)) [SMTPat (neg v)]
 
-assume val neg_add_inv_l : #n:pos -> v:vec n ->
-  Lemma (zero_vec (vec_add v (neg v))) [SMTPat (vec_add v (neg v))]
+assume val neg_add_inv_l : #n:pos -> #o:orient -> v:vec o n ->
+  Lemma (is_zero_vec (vec_add v (neg v))) [SMTPat (vec_add v (neg v))]
 
-assume val neg_add_inv_r : #n:pos -> v:vec n ->
-  Lemma (zero_vec (vec_add (neg v) v)) [SMTPat (vec_add (neg v) v)]
+assume val neg_add_inv_r : #n:pos -> #o:orient -> v:vec o n ->
+  Lemma (is_zero_vec (vec_add (neg v) v)) [SMTPat (vec_add (neg v) v)]
 
-assume val neg_involutive : #n:pos -> v:vec n ->
+assume val neg_involutive : #n:pos -> #o:orient -> v:vec o n ->
   Lemma (neg (neg v) == v) [SMTPat (neg (neg v))]
 
 (* vector-scalar mult *)
-assume val vec_scalar_mul : #n:pos -> v1:vec n -> a:num -> v2:vec n{
-  (col v1 ==> col v2) /\ (row v1 ==> row v2)
-}
+assume val vec_scalar_mul : #n:pos -> #o:orient -> v1:vec o n -> a:num -> v2:vec o n
 
-assume val vec_scalar_mul_zero : #n:pos -> v:vec n -> a:num ->
-  Lemma (requires zero_vec v) (ensures zero_vec (vec_scalar_mul v a)) 
+assume val vec_scalar_mul_zero : #n:pos -> #o:orient -> v:vec o n -> a:num ->
+  Lemma (requires is_zero_vec v) (ensures is_zero_vec (vec_scalar_mul v a)) 
   [SMTPat (vec_scalar_mul v a)]
 
-assume val vec_scalar_mul_one : #n:pos -> v:vec n -> a:num ->
-  Lemma (requires one a) (ensures vec_scalar_mul v a == v) 
+assume val vec_scalar_mul_one : #n:pos -> #o:orient -> v:vec o n -> a:num ->
+  Lemma (requires is_one a) (ensures vec_scalar_mul v a == v) 
   [SMTPat (vec_scalar_mul v a)]
 
-assume val vec_scalar_div : #n:pos -> v1:vec n -> a:num{nnz a} -> v2:vec n{
-  (col v1 ==> col v2) /\ (row v1 ==> row v2) /\
+assume val vec_scalar_div : #n:pos -> #o:orient -> v1:vec o n -> a:num{is_nnz a} -> v2:vec o n{
   vec_scalar_mul v2 a == v1
 }
 
-assume val vec_scalar_div_assoc : #n:pos -> v:vec n -> a1:num{nnz a1} -> a2:num{nnz a2} ->
+assume val vec_scalar_div_assoc : #n:pos -> #o:orient -> v:vec o n -> a1:num{is_nnz a1} -> a2:num{is_nnz a2} ->
   Lemma (vec_scalar_div (vec_scalar_div v a1) a2 == vec_scalar_div v (scalar_mul a1 a2))
         [SMTPat (vec_scalar_div (vec_scalar_div v a1) a2)]
 
@@ -71,15 +69,14 @@ assume val vec_scalar_div_assoc : #n:pos -> v:vec n -> a1:num{nnz a1} -> a2:num{
 assume val inner_prod : #n:pos -> rvec n -> cvec n -> num
 
 assume val inner_prod_zero : #n:pos -> r:rvec n -> c:cvec n ->
-  Lemma (requires zero_vec r \/ zero_vec c) (ensures zero (inner_prod r c)) 
+  Lemma (requires is_zero_vec r \/ is_zero_vec c) (ensures is_zero (inner_prod r c)) 
   [SMTPat (inner_prod r c)]
 
 (* transpose vector *)
-assume val trans_vec : #n:pos -> v1:vec n -> v2:vec n{
-  (row v1 ==> col v2 ) /\ (col v1 ==> row v2) /\
-  (zero_vec v1 ==> zero_vec v2)
+assume val trans_vec : #n:pos -> #o:orient -> v1:vec o n -> v2:vec (flip o) n{
+  (is_zero_vec v1 ==> is_zero_vec v2)
 }
 
-assume val trans_vec_scalar_div : #n:pos -> v:vec n -> a:num{nnz a} ->
+assume val trans_vec_scalar_div : #n:pos -> #o:orient -> v:vec o n -> a:num{is_nnz a} ->
   Lemma (trans_vec (vec_scalar_div v a) == vec_scalar_div (trans_vec v) a)
         [SMTPat (trans_vec (vec_scalar_div v a))]

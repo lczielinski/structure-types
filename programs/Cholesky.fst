@@ -12,4 +12,4 @@ let rec cholesky (#n:pos) (m:mat n{spd m}) :
       let l21 = vec_scalar_div c l11 in
       let s = schur1 d c a b in
       let l = cholesky s in
-      augment l l21 l11 _zero_rvec
+      augment l l21 l11 zero_rvec

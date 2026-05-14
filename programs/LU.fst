@@ -12,6 +12,6 @@ let rec lu (#n:pos) (m:mat n{rowsdd m \/ spd m}) :
     let s = schur1 d c a b in
     let (|l, u|) = lu s in
     let lc = vec_scalar_div c a in
-    let l' = augment l lc _one _zero_rvec in
-    let u' = augment u _zero_cvec a b in
+    let l' = augment l lc one zero_rvec in
+    let u' = augment u zero_cvec a b in
     (|l', u'|)

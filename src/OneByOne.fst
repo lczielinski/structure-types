@@ -15,13 +15,13 @@ assume val one_by_one_upper : m:mat 1 -> Lemma (upper m) [SMTPat (upper m)]
 assume val one_by_one_sym : m:mat 1 -> Lemma (symmetric m) [SMTPat (symmetric m)]
 
 assume val extract : m:mat 1 -> a:num{
-  (pos_diag m ==> posr a) /\
-  (nnz_diag m ==> nnz a)
+  (pos_diag m ==> is_pos a) /\
+  (nnz_diag m ==> is_nnz a)
 }
 
 assume val build_mat : a:num -> m:mat 1{
-  (posr a ==> pos_diag m) /\
-  (nnz a ==> nnz_diag m)
+  (is_pos a ==> pos_diag m) /\
+  (is_nnz a ==> nnz_diag m)
 }
 
 assume val extract_transpose : m:mat 1 ->
