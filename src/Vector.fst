@@ -79,8 +79,8 @@ let rec vec_scalar_mul_neg (#o: orient) (#n: pos) (v: vec o n) (a: num)
   | VecN v' _ -> vec_scalar_mul_neg v' a
 
 let rec vec_scalar_mul_assoc (#o: orient) (#n: pos) (v: vec o n) (a1 a2: num)
-    : Lemma (vec_scalar_mul (vec_scalar_mul v a1) a2 == vec_scalar_mul v (scalar_mul a1 a2))
-      [SMTPat (vec_scalar_mul (vec_scalar_mul v a1) a2)] =
+    : Lemma (vec_scalar_mul (vec_scalar_mul v a1) a2 == vec_scalar_mul v (scalar_mul a1 a2)) =
+      // [SMTPat (vec_scalar_mul (vec_scalar_mul v a1) a2)] =
   match v with
   | Vec1 a -> scalar_mul_assoc a a1 a2
   | VecN v' x ->

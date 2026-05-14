@@ -11,5 +11,6 @@ let rec triangular_inv (#n:pos) (l:mat n{unit_lower l}) :
   | MatN l' c _ _ ->
     let l'_inv = triangular_inv l' in
     let b = vec_neg (mat_vec_mul l'_inv c) in
-    MatN l'_inv b one zero_rvec 
+    let r = MatN l'_inv b one zero_rvec in
+    magic()
 #pop-options

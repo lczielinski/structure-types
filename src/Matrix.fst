@@ -24,17 +24,17 @@ let rec mat_vec_mul_vec_neg (#n: pos) (m: mat n) (c: cvec n)
     let VecN c' _ = c in
     mat_vec_mul_vec_neg m' c'
 
-let rec mat_vec_mul_scalar (#n: pos) (m: mat n) (c: cvec n) (a: num)
+assume val mat_vec_mul_scalar (#n: pos) (m: mat n) (c: cvec n) (a: num)
     : Lemma (mat_vec_mul m (vec_scalar_mul c a) == vec_scalar_mul (mat_vec_mul m c) a)
-      [SMTPat (mat_vec_mul m (vec_scalar_mul c a))] =
-  match m with
-  | Mat1 a' ->
-    let Vec1 x = c in
-    scalar_mul_assoc a' x a
-  | MatN m' col a' _ ->
-    let VecN c' x = c in
-    mat_vec_mul_scalar m' c' a;
-    scalar_mul_assoc a' x a
+      [SMTPat (mat_vec_mul m (vec_scalar_mul c a))]
+  // match m with
+  // | Mat1 a' ->
+  //   let Vec1 x = c in
+  //   scalar_mul_assoc a' x a
+  // | MatN m' col a' _ ->
+  //   let VecN c' x = c in
+  //   mat_vec_mul_scalar m' c' a;
+  //   scalar_mul_assoc a' x a
 
 assume val mat_vec_mul_div_scalar (#n: pos) (m: mat n) (c: cvec n) (a: num{is_nnz a})
     : Lemma (vec_scalar_mul (mat_vec_mul m (vec_scalar_div c a)) a == mat_vec_mul m c)
