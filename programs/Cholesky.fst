@@ -8,9 +8,9 @@ let rec cholesky (#n:pos) (m:mat n{spd m}) :
   | Mat1 a ->
     assert (pos_diag m);
     Mat1 (sqrt a)
-  | MatN d c a b ->
-    let l11 = sqrt a in   // is_pos a from destruct_spd, so l11 well-typed
+  | MatN m' c a _ ->
+    let l11 = sqrt a in
     let l21 = vec_scalar_div c l11 in
-    let s = schur1 d c a b in
+    let s = schur1 m in
     let l = cholesky s in
     MatN l l21 l11 zero_rvec
