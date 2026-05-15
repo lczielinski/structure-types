@@ -5,39 +5,13 @@ open Vector
 open MatrixType
 
 (* destructors *)
-assume val destruct : #n:pos{n >= 2} -> m:mat n ->
-  c:cvec (n-1) & a:num & b:rvec (n-1) & d:mat (n-1){
-    (lower m          ==> lower d /\ is_zero_vec b) /\
-    (upper m          ==> upper d /\ is_zero_vec c) /\
-    (unit_diag m      ==> is_one  a /\ unit_diag d) /\
-    (pos_diag m       ==> is_pos a /\ pos_diag  d) /\
-    (nnz_diag m       ==> is_nnz  a /\ nnz_diag  d) /\
-    (top_left_nnz m   ==> is_nnz  a) /\
-    (rowsdd m         ==> rowsdd d) /\
-    (spd m            ==> spd d /\ is_pos a)
-  }
+assume val destruct_rowsdd (#n: pos{n >= 2}) (m: mat n)
+    : Lemma (requires rowsdd m) (ensures (let MatN m' c a b = m in rowsdd m')) [SMTPat (rowsdd m)]
+assume val destruct_spd (#n: pos{n >= 2}) (m: mat n)
+    : Lemma (requires spd m) (ensures (let MatN m' c a b = m in spd m' /\ is_pos a)) [SMTPat (spd m)]
 
-(* augmenters *)
-assume val augment : #n:pos{n >= 2} -> m:mat (n-1) ->
-  c:cvec (n-1) -> a:num -> b:rvec (n-1) -> d:mat n{
-    (lower m     /\ is_zero_vec b              ==> lower d) /\
-    (upper m     /\ is_zero_vec c              ==> upper d) /\
-    (unit_diag m /\ is_one  a                  ==> unit_diag d) /\
-    (pos_diag m  /\ is_pos a                  ==> pos_diag  d) /\
-    (nnz_diag m  /\ is_nnz  a                  ==> nnz_diag  d) /\
-    (perm m      /\ is_zero_vec c /\ is_one a /\ is_zero_vec b ==> perm d)
-  }
-
-(* augment id with zero vec *)
-assume val augment_identity_zero : #m:pos -> #n:pos{n >= 2} ->
-  Lemma (requires n = m + 1)
-        (ensures augment #n _id_mat zero_cvec one zero_rvec == _id_mat)
-        [SMTPat (augment #n (_id_mat #m) (zero_cvec #m) one (zero_rvec #m))]
-
-(* destructing then augmenting recovers the original matrix *)
-assume val augment_destruct_inv : #n:pos{n >= 2} -> m:mat n ->
-  Lemma (ensures (let (|c, a, b, d|) = destruct m in augment d c a b == m))
-        [SMTPat (destruct m)]
+assume val augment_perm (#n: pos) (m: mat n) :
+  Lemma (requires perm m) (ensures perm (MatN m zero_cvec one zero_rvec)) [SMTPat (perm m)]
 
 (* matrix-vector mul *)
 assume val mat_vec_mul : #n:pos -> m:mat n -> c1:cvec n -> c2:cvec n{
@@ -81,9 +55,9 @@ assume val mat_sub : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n{
 assume val schur1 : #n:pos -> d:mat n -> c:cvec n -> a:num{is_nnz a} -> b:rvec n ->
   s:mat n{
     s == mat_sub d (outer_prod (vec_scalar_div c a) b) /\
-    (spd    (augment #(n+1) d c a b) ==> spd    s) /\
-    (rowsdd (augment #(n+1) d c a b) ==> rowsdd s) /\
-    (inv    (augment #(n+1) d c a b) ==> inv    s)
+    (spd    (MatN d c a b) ==> spd    s) /\
+    (rowsdd (MatN d c a b) ==> rowsdd s) /\
+    (inv    (MatN d c a b) ==> inv    s)
   }
 
 (* transpose *)
@@ -92,19 +66,20 @@ assume val transpose : #n:pos -> mat n -> mat n
 assume val transpose_involutive : #n:pos -> m:mat n ->
   Lemma (transpose (transpose m) == m) [SMTPat (transpose (transpose m))]
 
-assume val transpose_augment : #n:pos{n >= 2} -> m:mat (n-1) -> 
-  c:cvec (n-1) -> a:num -> b:rvec (n-1) ->
-  Lemma (transpose (augment m c a b) == augment (transpose m) (trans_vec b) a (trans_vec c))
-  [SMTPat (transpose (augment m c a b))]
+assume val transpose_augment : #n:pos -> #k:pos{k == n + 1} ->
+  m:mat n -> c:cvec n -> a:num -> b:rvec n ->
+  Lemma (ensures (transpose #k (MatN m c a b)
+                  == MatN #n (transpose m) (trans_vec b) a (trans_vec c)))
+        [SMTPat (transpose #k (MatN m c a b))]
 
 (* symmetry *)
 let symmetric (#n:pos) (m:mat n) : prop = m == transpose m
 
 assume val destruct_symmetric : #n:pos{n >= 2} -> m:mat n ->
   Lemma (requires symmetric m)
-        (ensures (let (|c, a, b, d|) = destruct m in
+        (ensures (let (MatN d c a b) = m in
                   trans_vec c == b /\ trans_vec b == c))
-        [SMTPat (destruct m)]
+        [SMTPat (symmetric m)]
 
 assume val spd_symmetric : #n:pos -> m:mat n ->
   Lemma (requires spd m) (ensures symmetric m) [SMTPat (spd m)]

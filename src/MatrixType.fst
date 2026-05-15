@@ -1,19 +1,41 @@
 module MatrixType
 
 open Scalar
+open Vector
 
 (* square matrices *)
-assume type mat : pos -> Type
+noeq type mat : pos -> Type =
+  | Mat1 : num -> mat 1
+  | MatN : #n: pos -> mat n -> cvec n -> num -> rvec n -> mat (n + 1)
 
 (* shapes *)
-assume val lower : #n:pos -> mat n -> prop
-assume val upper : #n:pos -> mat n -> prop
-let diagonal (#n:pos) (m:mat n) : prop = lower m /\ upper m
+let rec lower (#n: pos) (m: mat n) : prop =
+  match m with
+  | Mat1 _ -> True
+  | MatN m' _ _ row -> lower m' /\ is_zero_vec row
+
+let rec upper (#n: pos) (m: mat n) : prop =
+  match m with
+  | Mat1 _ -> True
+  | MatN m' col _ _ -> upper m' /\ is_zero_vec col
+
+let diagonal (#n: pos) (m: mat n) : prop = lower m /\ upper m
 
 (* what's on the diagonal *)
-assume val unit_diag : #n:pos -> mat n -> prop
-assume val nnz_diag  : #n:pos -> mat n -> prop
-assume val pos_diag  : #n:pos -> mat n -> prop
+let rec unit_diag (#n: pos) (m: mat n) : prop =
+  match m with
+  | Mat1 a -> is_one a
+  | MatN m' _ corner _ -> unit_diag m' /\ is_one corner
+
+let rec nnz_diag (#n: pos) (m: mat n) : prop =
+  match m with
+  | Mat1 a -> is_nnz a
+  | MatN m' _ corner _ -> nnz_diag m' /\ is_nnz corner
+
+let rec pos_diag (#n: pos) (m: mat n) : prop =
+  match m with
+  | Mat1 a -> is_pos a
+  | MatN m' _ corner _ -> pos_diag m' /\ is_pos corner
 
 assume val pos_diag_nnz : #n:pos -> m:mat n ->
   Lemma (requires pos_diag m) (ensures nnz_diag m) [SMTPat (pos_diag m)]
@@ -36,7 +58,8 @@ assume val rowsdd_nnz_diag : #n:pos -> m:mat n ->
 let unit_lower (#n:pos) (m:mat n) : prop = lower m /\ unit_diag m
 
 (* identity *)
-assume val _id_mat : #n:pos -> m:mat n{diagonal m /\ unit_diag m}
+let rec _id_mat (#n: pos) : m:mat n =
+  if n = 1 then Mat1 one else MatN (_id_mat #(n - 1)) zero_cvec one zero_rvec
 
 let identity (#n:pos) (m:mat n) : prop = m == _id_mat
 
@@ -55,4 +78,10 @@ assume val id_mat_is_perm : #n:pos ->
   Lemma (perm (_id_mat #n)) [SMTPat (_id_mat #n)]
 
 (* top-left entry is nonzero *)
-assume val top_left_nnz : #n:pos -> mat n -> prop
+let top_left_nnz (#n: pos) (m: mat n) : prop =
+  match m with
+  | Mat1 a -> is_nnz a
+  | MatN _ _ corner _ -> is_nnz corner
+
+let nnz_diag_top_left (#n: pos) (m: mat n)
+    : Lemma (requires nnz_diag m) (ensures top_left_nnz m) [SMTPat (nnz_diag m)] = ()

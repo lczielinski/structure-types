@@ -74,12 +74,12 @@ assume val transpose_perm : #n:pos -> m:mat n ->
                  mat_mul (transpose m) m == _id_mat)
         [SMTPat (perm m)]
 
-assume val mul_augment : #n:pos{n >= 2} ->
-  m1:mat (n-1) -> c1:cvec (n-1) -> a1:num -> b1:rvec (n-1) ->
-  m2:mat (n-1) -> c2:cvec (n-1) -> a2:num -> b2:rvec (n-1) ->
-  Lemma (ensures mat_mul #n (augment m1 c1 a1 b1) (augment m2 c2 a2 b2)
-              == augment (mat_add (outer_prod c1 b2) (mat_mul m1 m2))
+assume val mul_augment_new : #n:pos -> #k:pos{k == n + 1} ->
+  m1:mat n -> c1:cvec n -> a1:num -> b1:rvec n ->
+  m2:mat n -> c2:cvec n -> a2:num -> b2:rvec n ->
+  Lemma (ensures mat_mul #k (MatN m1 c1 a1 b1) (MatN m2 c2 a2 b2)
+              == MatN #n (mat_add (outer_prod c1 b2) (mat_mul m1 m2))
                          (vec_add (vec_scalar_mul c1 a2) (mat_vec_mul m1 c2))
                          (scalar_add (scalar_mul a1 a2) (inner_prod b1 c2))
                          (vec_add (vec_scalar_mul b2 a1) (vec_mat_mul b1 m2)))
-        [SMTPat (mat_mul (augment m1 c1 a1 b1) (augment m2 c2 a2 b2))]
+        [SMTPat (mat_mul #k (MatN m1 c1 a1 b1) (MatN m2 c2 a2 b2))]

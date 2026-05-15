@@ -14,30 +14,13 @@ assume val one_by_one_lower : m:mat 1 -> Lemma (lower m) [SMTPat (lower m)]
 assume val one_by_one_upper : m:mat 1 -> Lemma (upper m) [SMTPat (upper m)]
 assume val one_by_one_sym : m:mat 1 -> Lemma (symmetric m) [SMTPat (symmetric m)]
 
-assume val extract : m:mat 1 -> a:num{
-  (pos_diag m ==> is_pos a) /\
-  (nnz_diag m ==> is_nnz a)
-}
-
-assume val build_mat : a:num -> m:mat 1{
-  (is_pos a ==> pos_diag m) /\
-  (is_nnz a ==> nnz_diag m)
-}
-
 assume val extract_transpose : m:mat 1 ->
-  Lemma (ensures extract (transpose m) == extract m)
-        [SMTPat (extract (transpose m))]
-
-assume val extract_build : a:num ->
-  Lemma (ensures extract (build_mat a) == a) [SMTPat (extract (build_mat a))]
-
-assume val one_by_one_equal : m1:mat 1 -> m2:mat 1 ->
-  Lemma (requires extract m1 == extract m2) (ensures m1 == m2)
-        [SMTPat (extract m1); SMTPat (extract m2)]
-
-assume val extract_mul : m1:mat 1 -> m2:mat 1 ->
-  Lemma (ensures extract (mat_mul m1 m2) == scalar_mul (extract m1) (extract m2))
-        [SMTPat (mat_mul m1 m2)]
+  Lemma (ensures transpose m == m)
+        [SMTPat (transpose m)]
 
 assume val inv_1x1_nnz_diag : m:mat 1 ->
   Lemma (requires inv m) (ensures nnz_diag m) [SMTPat (inv (m <: mat 1))]
+
+assume val mul_1x1 : m1:mat 1 -> m2:mat 1 ->
+  Lemma (let Mat1 a1 = m1 in let Mat1 a2 = m2 in mat_mul m1 m2 == Mat1 (scalar_mul a1 a2))
+  [SMTPat (mat_mul m1 m2)]
