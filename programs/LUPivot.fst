@@ -11,10 +11,10 @@ let rec lu_pivoting (#n:pos) (m:mat n{inv m}) :
   u:mat n{upper u /\ nnz_diag u /\ mat_mul p m == mat_mul l u} =
   match m with
   | Mat1 _ -> (|id_mat, id_mat, m|)
-  | MatN mm mb ma mc ->
+  | MatN _ _ _ _ ->
     let (|p', m'|) = pivot m in
-    let (MatN d c a b) = m' in
-    let s = schur1 d c a b in
+    let (MatN _ c a b) = m' in
+    let s = schur1 m' in
     let (|p, l, u|) = lu_pivoting s in
 
     let lc = vec_scalar_div c a in

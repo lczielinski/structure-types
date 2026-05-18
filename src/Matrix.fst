@@ -81,19 +81,37 @@ assume val mat_add_sub_cancel (#n: pos) (m1 m2: mat n)
       [SMTPat (mat_add m2 (mat_sub m1 m2))]
 
 (* schur complement *)
-assume val schur1 : #n:pos -> d:mat n -> c:cvec n -> a:num{is_nnz a} -> b:rvec n ->
-  s:mat n{
-    s == mat_sub d (outer_prod (vec_scalar_div c a) b) /\
-    (spd    (MatN d c a b) ==> spd    s) /\
-    (rowsdd (MatN d c a b) ==> rowsdd s) /\
-    (inv    (MatN d c a b) ==> inv    s)
-  }
+let schur1 (#n: pos{n >= 2}) (m: mat n{top_left_nnz m})
+    : mat (n - 1) =
+  let MatN d c a b = m in
+  mat_sub d (outer_prod (vec_scalar_div c a) b)
+
+assume val schur1_spd (#n: pos{n >= 2}) (m: mat n)
+    : Lemma (requires spd m)
+      (ensures spd (schur1 m))
+      [SMTPat (schur1 m)]
+
+assume val schur1_rowsdd (#n: pos{n >= 2}) (m: mat n)
+    : Lemma (requires rowsdd m)
+      (ensures rowsdd (schur1 m))
+      [SMTPat (schur1 m)]
+
+assume val schur1_inv (#n: pos{n >= 2}) (m: mat n)
+    : Lemma (requires inv m /\ top_left_nnz m)
+      (ensures inv (schur1 m))
+      [SMTPat (schur1 m)]
 
 (* transpose *)
-assume val transpose : #n:pos -> mat n -> mat n
+let rec transpose (#n: pos) (m: mat n) : mat n =
+  match m with
+  | Mat1 a -> Mat1 a
+  | MatN m' c a b -> MatN (transpose m') (vec_trans b) a (vec_trans c)
 
-assume val transpose_involutive : #n:pos -> m:mat n ->
-  Lemma (transpose (transpose m) == m) [SMTPat (transpose (transpose m))]
+let rec transpose_involutive (#n: pos) (m: mat n)
+    : Lemma (transpose (transpose m) == m) [SMTPat (transpose (transpose m))] =
+  match m with
+  | Mat1 _ -> ()
+  | MatN m' _ _ _ -> transpose_involutive m'
 
 assume val transpose_augment : #n:pos -> #k:pos{k == n + 1} ->
   m:mat n -> c:cvec n -> a:num -> b:rvec n ->
@@ -101,18 +119,10 @@ assume val transpose_augment : #n:pos -> #k:pos{k == n + 1} ->
                   == MatN #n (transpose m) (vec_trans b) a (vec_trans c)))
         [SMTPat (transpose #k (MatN m c a b))]
 
-assume val transpose_1 : m:mat 1 ->
-  Lemma (ensures transpose m == m)
-        [SMTPat (transpose m)]
-
 (* symmetry *)
-let symmetric (#n:pos) (m:mat n) : prop = m == transpose m
+let symmetric (#n: pos) (m: mat n) : prop = m == transpose m
 
-assume val destruct_symmetric : #n:pos{n >= 2} -> m:mat n ->
-  Lemma (requires symmetric m)
-        (ensures (let (MatN d c a b) = m in
-                  vec_trans c == b /\ vec_trans b == c))
-        [SMTPat (symmetric m)]
+let one_by_one_sym (m:mat 1) : Lemma (symmetric m) [SMTPat (symmetric m)] = ()
 
-assume val spd_symmetric : #n:pos -> m:mat n ->
-  Lemma (requires spd m) (ensures symmetric m) [SMTPat (spd m)]
+assume val spd_symmetric (#n: pos) (m: mat n)
+    : Lemma (requires spd m) (ensures symmetric m) [SMTPat (spd m)]
