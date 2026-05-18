@@ -65,6 +65,9 @@ assume val destruct_rowsdd (#n: pos{n >= 2}) (m: mat n)
 assume val destruct_spd (#n: pos{n >= 2}) (m: mat n)
     : Lemma (requires spd m) (ensures (let MatN m' _ a _ = m in spd m' /\ is_pos a)) [SMTPat (spd m)]
 
+assume val spd_1 : a:num ->
+  Lemma (requires spd (Mat1 a)) (ensures is_pos a) [SMTPat (spd (Mat1 a))]
+
 assume val inv_1x1_nnz_diag (m: mat 1)
     : Lemma (requires inv m) (ensures nnz_diag m) [SMTPat (inv (m <: mat 1))]
 

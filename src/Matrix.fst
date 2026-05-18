@@ -72,6 +72,10 @@ assume val transpose_augment : #n:pos -> #k:pos{k == n + 1} ->
                   == MatN #n (transpose m) (trans_vec b) a (trans_vec c)))
         [SMTPat (transpose #k (MatN m c a b))]
 
+assume val transpose_1 : m:mat 1 ->
+  Lemma (ensures transpose m == m)
+        [SMTPat (transpose m)]
+
 (* symmetry *)
 let symmetric (#n:pos) (m:mat n) : prop = m == transpose m
 
