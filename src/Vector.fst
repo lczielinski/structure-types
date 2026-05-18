@@ -33,51 +33,124 @@ let rec vec_add (#o: orient) (#n: pos) (v1 v2: vec o n) : v3: vec o n
   | VecN v1' x -> let VecN v2' y = v2 in VecN (vec_add v1' v2') (scalar_add x y)
 
 (* negate a vector *)
-assume val neg (#o: orient) (#n: pos) (v1: vec o n) : vec o n 
+let rec vec_neg (#o: orient) (#n: pos) (v1: vec o n) : v2: vec o n 
+  {is_zero_vec v1 ==> is_zero_vec v2} =
+  match v1 with
+  | Vec1 x -> Vec1 (scalar_neg x)
+  | VecN v1' x -> VecN (vec_neg v1') (scalar_neg x)
 
-assume val neg_zero : #n:pos -> #o:orient -> v:vec o n ->
-  Lemma (requires is_zero_vec v) (ensures is_zero_vec (neg v)) [SMTPat (neg v)]
+let rec vec_neg_add_inv_l (#o: orient) (#n: pos) (v: vec o n)
+    : Lemma (is_zero_vec (vec_add v (vec_neg v))) [SMTPat (vec_add v (vec_neg v))] =
+  match v with
+  | Vec1 _ -> ()
+  | VecN v' _ -> vec_neg_add_inv_l v'
 
-assume val neg_add_inv_l : #n:pos -> #o:orient -> v:vec o n ->
-  Lemma (is_zero_vec (vec_add v (neg v))) [SMTPat (vec_add v (neg v))]
+let rec vec_neg_add_inv_r (#o: orient) (#n: pos) (v: vec o n)
+    : Lemma (is_zero_vec (vec_add (vec_neg v) v)) [SMTPat (vec_add (vec_neg v) v)] =
+  match v with
+  | Vec1 _ -> ()
+  | VecN v' _ -> vec_neg_add_inv_r v'
 
-assume val neg_add_inv_r : #n:pos -> #o:orient -> v:vec o n ->
-  Lemma (is_zero_vec (vec_add (neg v) v)) [SMTPat (vec_add (neg v) v)]
+let rec vec_neg_involutive (#o: orient) (#n: pos) (v: vec o n)
+    : Lemma (vec_neg (vec_neg v) == v) [SMTPat (vec_neg (vec_neg v))] =
+  match v with
+  | Vec1 _ -> ()
+  | VecN v' _ -> vec_neg_involutive v'
 
-assume val neg_involutive : #n:pos -> #o:orient -> v:vec o n ->
-  Lemma (neg (neg v) == v) [SMTPat (neg (neg v))]
+let rec vec_neg_add_dist (#o: orient) (#n: pos) (v1 v2: vec o n)
+    : Lemma (vec_neg (vec_add v1 v2) == vec_add (vec_neg v1) (vec_neg v2))
+      [SMTPat (vec_neg (vec_add v1 v2))] =
+  match v1 with
+  | Vec1 _ -> let Vec1 _ = v2 in ()
+  | VecN v1' _ -> let VecN v2' _ = v2 in vec_neg_add_dist v1' v2'
 
-(* vector-scalar mult *)
-assume val vec_scalar_mul : #n:pos -> #o:orient -> v1:vec o n -> a:num -> v2:vec o n
+(* vector-scalar mul *)
+let rec vec_scalar_mul (#o: orient) (#n: pos) (v1: vec o n) (a: num) : v2: vec o n
+  {(is_one a ==> v2 == v1) /\ (is_zero_vec v1 ==> is_zero_vec v2) /\ (is_zero a ==> is_zero_vec v2)} =
+  match v1 with
+  | Vec1 x -> Vec1 (scalar_mul x a)
+  | VecN v1' x -> VecN (vec_scalar_mul v1' a) (scalar_mul x a)
 
-assume val vec_scalar_mul_zero : #n:pos -> #o:orient -> v:vec o n -> a:num ->
-  Lemma (requires is_zero_vec v) (ensures is_zero_vec (vec_scalar_mul v a)) 
-  [SMTPat (vec_scalar_mul v a)]
+let rec vec_scalar_mul_neg (#o: orient) (#n: pos) (v: vec o n) (a: num)
+    : Lemma (vec_scalar_mul v (scalar_neg a) == vec_neg (vec_scalar_mul v a))
+      [SMTPat (vec_scalar_mul v (scalar_neg a))] =
+  match v with
+  | Vec1 _ -> ()
+  | VecN v' _ -> vec_scalar_mul_neg v' a
 
-assume val vec_scalar_mul_one : #n:pos -> #o:orient -> v:vec o n -> a:num ->
-  Lemma (requires is_one a) (ensures vec_scalar_mul v a == v) 
-  [SMTPat (vec_scalar_mul v a)]
+let rec vec_scalar_mul_assoc (#o: orient) (#n: pos) (v: vec o n) (a1 a2: num)
+    : Lemma (vec_scalar_mul (vec_scalar_mul v a1) a2 == vec_scalar_mul v (scalar_mul a1 a2)) =
+      // [SMTPat (vec_scalar_mul (vec_scalar_mul v a1) a2)] =
+  match v with
+  | Vec1 a -> scalar_mul_assoc a a1 a2
+  | VecN v' x ->
+    vec_scalar_mul_assoc v' a1 a2;
+    scalar_mul_assoc x a1 a2
 
-assume val vec_scalar_div : #n:pos -> #o:orient -> v1:vec o n -> a:num{is_nnz a} -> v2:vec o n{
-  vec_scalar_mul v2 a == v1
-}
+let rec vec_scalar_mul_add_dist (#o: orient) (#n: pos) (v1 v2: vec o n) (a: num)
+    : Lemma (vec_scalar_mul (vec_add v1 v2) a == vec_add (vec_scalar_mul v1 a) (vec_scalar_mul v2 a))
+      [SMTPat (vec_scalar_mul (vec_add v1 v2) a)] =
+  match v1 with
+  | Vec1 _ -> let Vec1 _ = v2 in ()
+  | VecN v1' _ -> let VecN v2' _ = v2 in vec_scalar_mul_add_dist v1' v2' a
 
-assume val vec_scalar_div_assoc : #n:pos -> #o:orient -> v:vec o n -> a1:num{is_nnz a1} -> a2:num{is_nnz a2} ->
-  Lemma (vec_scalar_div (vec_scalar_div v a1) a2 == vec_scalar_div v (scalar_mul a1 a2))
-        [SMTPat (vec_scalar_div (vec_scalar_div v a1) a2)]
+(* vector-scalar div *)
+let rec vec_scalar_div (#o: orient) (#n: pos) (v1: vec o n) (a: num{is_nnz a}) : v2: vec o n 
+  {vec_scalar_mul v2 a == v1} =
+  match v1 with
+  | Vec1 x -> Vec1 (scalar_div x a)
+  | VecN v1' x -> VecN (vec_scalar_div v1' a) (scalar_div x a)
+
+let rec vec_scalar_div_assoc (#o: orient) (#n: pos) (v: vec o n)
+      (a1: num{is_nnz a1}) (a2: num{is_nnz a2})
+    : Lemma (vec_scalar_div (vec_scalar_div v a1) a2 == vec_scalar_div v (scalar_mul a1 a2))
+      [SMTPat (vec_scalar_div (vec_scalar_div v a1) a2)] =
+  match v with
+  | Vec1 _ -> ()
+  | VecN v' _ -> vec_scalar_div_assoc v' a1 a2
 
 (* inner product *)
-assume val inner_prod : #n:pos -> rvec n -> cvec n -> num
+let rec inner_prod (#n: pos) (r: rvec n) (c: cvec n) : a: num 
+  {(is_zero_vec r \/ is_zero_vec c) ==> is_zero a} =
+  match r with
+  | Vec1 x -> let Vec1 y = c in scalar_mul x y
+  | VecN r' x -> let VecN c' y = c in scalar_add (inner_prod r' c') (scalar_mul x y)
 
-assume val inner_prod_zero : #n:pos -> r:rvec n -> c:cvec n ->
-  Lemma (requires is_zero_vec r \/ is_zero_vec c) (ensures is_zero (inner_prod r c)) 
-  [SMTPat (inner_prod r c)]
+let rec inner_prod_neg_r (#n: pos) (r: rvec n) (c: cvec n)
+    : Lemma (inner_prod r (vec_neg c) == scalar_neg (inner_prod r c))
+      [SMTPat (inner_prod r (vec_neg c))] =
+  match r with
+  | Vec1 _ -> let Vec1 _ = c in ()
+  | VecN r' _ -> let VecN c' _ = c in inner_prod_neg_r r' c'
+
+let rec inner_prod_scalar_r (#n: pos) (r: rvec n) (c: cvec n) (a: num)
+    : Lemma (inner_prod r (vec_scalar_mul c a) == scalar_mul (inner_prod r c) a)
+      [SMTPat (inner_prod r (vec_scalar_mul c a))] =
+  match r with
+  | Vec1 x ->
+    let Vec1 y = c in
+    scalar_mul_assoc x y a
+  | VecN r' rx ->
+    let VecN c' cy = c in
+    inner_prod_scalar_r r' c' a;
+    scalar_mul_assoc rx cy a
 
 (* transpose vector *)
-assume val trans_vec : #n:pos -> #o:orient -> v1:vec o n -> v2:vec (flip o) n{
-  (is_zero_vec v1 ==> is_zero_vec v2)
-}
+let rec vec_trans (#o: orient) (#n: pos) (v1: vec o n) : v2: vec (flip o) n 
+  {is_zero_vec v1 ==> is_zero_vec v2} =
+  match v1 with
+  | Vec1 x -> Vec1 x
+  | VecN v1' x -> VecN (vec_trans v1') x
 
-assume val trans_vec_scalar_div : #n:pos -> #o:orient -> v:vec o n -> a:num{is_nnz a} ->
-  Lemma (trans_vec (vec_scalar_div v a) == vec_scalar_div (trans_vec v) a)
-        [SMTPat (trans_vec (vec_scalar_div v a))]
+let rec vec_trans_scalar_div (#o: orient) (#n: pos) (v: vec o n) (a: num{is_nnz a})
+    : Lemma (vec_trans (vec_scalar_div v a) == vec_scalar_div (vec_trans v) a)
+      [SMTPat (vec_trans (vec_scalar_div v a))] =
+  match v with
+  | Vec1 _ -> ()
+  | VecN v' _ -> vec_trans_scalar_div v' a
+  
+let rec vec_trans_involutive (#o: orient) (#n: pos) (v: vec o n)
+    : Lemma (vec_trans (vec_trans v) == v) [SMTPat (vec_trans (vec_trans v))] =
+  match v with
+  | Vec1 _ -> ()
+  | VecN v' _ -> vec_trans_involutive v'

@@ -22,10 +22,10 @@ assume val vec_mat_mul : #n:pos -> r1:rvec n -> m:mat n -> r2:rvec n{
   (is_id m ==> r1 == r2) /\ (is_zero_vec r1 ==> is_zero_vec r2)
 }
 
-(* mul by neg vec *)
-assume val mat_vec_mul_neg : #n:pos -> m:mat n -> c:cvec n ->
-  Lemma (mat_vec_mul m (neg c) == neg (mat_vec_mul m c))
-        [SMTPat (mat_vec_mul m (neg c))]
+(* mul by vec_neg vec *)
+assume val mat_vec_mul_vec_neg : #n:pos -> m:mat n -> c:cvec n ->
+  Lemma (mat_vec_mul m (vec_neg c) == vec_neg (mat_vec_mul m c))
+        [SMTPat (mat_vec_mul m (vec_neg c))]
 
 (* m * (a * c) == a * (m * c) *)
 assume val mat_vec_mul_scalar : #n:pos -> m:mat n -> c:cvec n -> a:num ->
@@ -69,7 +69,7 @@ assume val transpose_involutive : #n:pos -> m:mat n ->
 assume val transpose_augment : #n:pos -> #k:pos{k == n + 1} ->
   m:mat n -> c:cvec n -> a:num -> b:rvec n ->
   Lemma (ensures (transpose #k (MatN m c a b)
-                  == MatN #n (transpose m) (trans_vec b) a (trans_vec c)))
+                  == MatN #n (transpose m) (vec_trans b) a (vec_trans c)))
         [SMTPat (transpose #k (MatN m c a b))]
 
 assume val transpose_1 : m:mat 1 ->
@@ -82,7 +82,7 @@ let symmetric (#n:pos) (m:mat n) : prop = m == transpose m
 assume val destruct_symmetric : #n:pos{n >= 2} -> m:mat n ->
   Lemma (requires symmetric m)
         (ensures (let (MatN d c a b) = m in
-                  trans_vec c == b /\ trans_vec b == c))
+                  vec_trans c == b /\ vec_trans b == c))
         [SMTPat (symmetric m)]
 
 assume val spd_symmetric : #n:pos -> m:mat n ->
