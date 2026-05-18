@@ -27,6 +27,9 @@ assume val scalar_mul_assoc (a b c: num)
 (* division *)
 assume val scalar_div (a1: num) (a2: num{is_nnz a2}) : a3: num{scalar_mul a3 a2 == a1}
 
+assume val scalar_mul_div_comm (a b: num) (l: num{is_nnz l})
+    : Lemma (scalar_mul a (scalar_div b l) == scalar_mul (scalar_div a l) b)
+
 assume val scalar_div_assoc (a1: num) (a2: num{is_nnz a2}) (a3: num{is_nnz a3})
     : Lemma (scalar_div (scalar_div a1 a2) a3 == scalar_div a1 (scalar_mul a2 a3))
       [SMTPat (scalar_div (scalar_div a1 a2) a3)]
@@ -35,6 +38,12 @@ assume val scalar_div_assoc (a1: num) (a2: num{is_nnz a2}) (a3: num{is_nnz a3})
 assume val scalar_add (a1 a2: num) : a3: num
       { (is_zero a1 ==> a2 == a3) /\ (is_zero a2 ==> a1 == a3) /\
         (is_pos a1 /\ is_pos a2 ==> is_pos a3) }
+
+assume val scalar_add_comm (a b: num)
+    : Lemma (scalar_add a b == scalar_add b a)
+
+assume val scalar_add_assoc (a b c: num)
+    : Lemma (scalar_add (scalar_add a b) c == scalar_add a (scalar_add b c))
 
 assume val scalar_mul_add_dist_r (a1 a2 a3: num)
     : Lemma (scalar_mul (scalar_add a1 a2) a3 == scalar_add (scalar_mul a1 a3) (scalar_mul a2 a3))

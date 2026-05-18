@@ -24,13 +24,18 @@ let rec mat_vec_mul_vec_neg (#n: pos) (m: mat n) (c: cvec n)
     let VecN c' _ = c in
     mat_vec_mul_vec_neg m' c'
 
-assume val mat_vec_mul_scalar (#n: pos) (m: mat n) (c: cvec n) (a: num)
-    : Lemma (mat_vec_mul m (vec_scalar_mul c a) == vec_scalar_mul (mat_vec_mul m c) a)
-      [SMTPat (mat_vec_mul m (vec_scalar_mul c a))]
-
-assume val mat_vec_mul_div_scalar (#n: pos) (m: mat n) (c: cvec n) (a: num{is_nnz a})
+let rec mat_vec_mul_div_scalar (#n: pos) (m: mat n) (c: cvec n) (a: num{is_nnz a})
     : Lemma (vec_scalar_mul (mat_vec_mul m (vec_scalar_div c a)) a == mat_vec_mul m c)
-      [SMTPat (vec_scalar_mul (mat_vec_mul m (vec_scalar_div c a)) a)]
+      [SMTPat (vec_scalar_mul (mat_vec_mul m (vec_scalar_div c a)) a)] =
+  match m with
+  | Mat1 s ->
+    let Vec1 x = c in
+    scalar_mul_assoc s (scalar_div x a) a
+  | MatN m' col d row ->
+    let VecN c' y = c in
+    mat_vec_mul_div_scalar m' c' a;
+    vec_scalar_mul_assoc col (scalar_div y a) a;
+    scalar_mul_assoc d (scalar_div y a) a
 
 (* row-vector times matrix *)
 let rec vec_mat_mul (#n: pos) (r1: rvec n) (m: mat n) : r2: rvec n 
@@ -54,9 +59,19 @@ let rec outer_prod (#n: pos) (c: cvec n) (r: rvec n)
     let VecN r' y = r in
     MatN (outer_prod c' r') (vec_scalar_mul c' y) (scalar_mul x y) (vec_scalar_mul r' x)
 
-assume val outer_prod_div_comm (#n: pos) (c: cvec n) (b: rvec n) (l: num{is_nnz l})
+let rec outer_prod_div_comm (#n: pos) (c: cvec n) (b: rvec n) (l: num{is_nnz l})
     : Lemma (outer_prod c (vec_scalar_div b l) == outer_prod (vec_scalar_div c l) b)
-      [SMTPat (outer_prod c (vec_scalar_div b l))]
+      [SMTPat (outer_prod c (vec_scalar_div b l))] =
+  match c with
+  | Vec1 x ->
+    let Vec1 y = b in
+    scalar_mul_div_comm x y l
+  | VecN c' x ->
+    let VecN r' y = b in
+    outer_prod_div_comm c' r' l;
+    scalar_mul_div_comm x y l;
+    vec_scalar_mul_div_comm c' y l;
+    vec_scalar_mul_div_comm r' x l
 
 (* matrix addition *)
 let rec mat_add (#n: pos) (m1 m2: mat n) : m3: mat n 
@@ -76,9 +91,21 @@ let rec mat_neg (#n: pos) (m: mat n) : mat n =
 (* matrix subtraction *)
 let mat_sub (#n: pos) (m1 m2: mat n) : mat n = mat_add m1 (mat_neg m2)
 
-assume val mat_add_sub_cancel (#n: pos) (m1 m2: mat n)
+let rec mat_add_sub_cancel (#n: pos) (m1 m2: mat n)
     : Lemma (mat_add m2 (mat_sub m1 m2) == m1)
-      [SMTPat (mat_add m2 (mat_sub m1 m2))]
+      [SMTPat (mat_add m2 (mat_sub m1 m2))] =
+  match m1 with
+  | Mat1 b ->
+    let Mat1 a = m2 in
+    scalar_add_comm b (scalar_neg a);
+    scalar_add_assoc a (scalar_neg a) b
+  | MatN m1' c1 a1 b1 ->
+    let MatN m2' c2 a2 b2 = m2 in
+    mat_add_sub_cancel m1' m2';
+    scalar_add_comm a1 (scalar_neg a2);
+    scalar_add_assoc a2 (scalar_neg a2) a1;
+    vec_add_sub_cancel c1 c2;
+    vec_add_sub_cancel b1 b2
 
 (* schur complement *)
 let schur1 (#n: pos{n >= 2}) (m: mat n{top_left_nnz m})
@@ -113,11 +140,11 @@ let rec transpose_involutive (#n: pos) (m: mat n)
   | Mat1 _ -> ()
   | MatN m' _ _ _ -> transpose_involutive m'
 
-assume val transpose_augment : #n:pos -> #k:pos{k == n + 1} ->
-  m:mat n -> c:cvec n -> a:num -> b:rvec n ->
-  Lemma (ensures (transpose #k (MatN m c a b)
-                  == MatN #n (transpose m) (vec_trans b) a (vec_trans c)))
-        [SMTPat (transpose #k (MatN m c a b))]
+let transpose_augment (#n:pos) (#k:pos{k == n + 1})
+    (m:mat n) (c:cvec n) (a:num) (b:rvec n)
+    : Lemma (transpose #k (MatN m c a b)
+             == MatN #n (transpose m) (vec_trans b) a (vec_trans c))
+      [SMTPat (transpose #k (MatN m c a b))] = ()
 
 (* symmetry *)
 let symmetric (#n: pos) (m: mat n) : prop = m == transpose m

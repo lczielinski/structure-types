@@ -38,9 +38,6 @@ assume val mat_mul_perm (#n: pos) (m1 m2: mat n)
       (ensures perm (mat_mul m1 m2))
       [SMTPat (perm (mat_mul m1 m2))]
 
-assume val mat_mul_assoc : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n ->
-  Lemma (mat_mul (mat_mul m1 m2) m3 == mat_mul m1 (mat_mul m2 m3))
-
 assume val mat_mul_sub_distr (#n: pos) (m m1 m2: mat n)
     : Lemma (mat_mul m (mat_sub m1 m2) == mat_sub (mat_mul m m1) (mat_mul m m2))
       [SMTPat (mat_mul m (mat_sub m1 m2))]

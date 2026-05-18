@@ -51,6 +51,19 @@ let rec vec_neg_add_inv_r (#o: orient) (#n: pos) (v: vec o n)
   | Vec1 _ -> ()
   | VecN v' _ -> vec_neg_add_inv_r v'
 
+let rec vec_add_sub_cancel (#o: orient) (#n: pos) (v1 v2: vec o n)
+    : Lemma (vec_add v2 (vec_add v1 (vec_neg v2)) == v1) =
+  match v1 with
+  | Vec1 b ->
+    let Vec1 a = v2 in
+    scalar_add_comm b (scalar_neg a);
+    scalar_add_assoc a (scalar_neg a) b
+  | VecN v1' x ->
+    let VecN v2' y = v2 in
+    vec_add_sub_cancel v1' v2';
+    scalar_add_comm x (scalar_neg y);
+    scalar_add_assoc y (scalar_neg y) x
+
 let rec vec_neg_involutive (#o: orient) (#n: pos) (v: vec o n)
     : Lemma (vec_neg (vec_neg v) == v) [SMTPat (vec_neg (vec_neg v))] =
   match v with
@@ -80,7 +93,6 @@ let rec vec_scalar_mul_neg (#o: orient) (#n: pos) (v: vec o n) (a: num)
 
 let rec vec_scalar_mul_assoc (#o: orient) (#n: pos) (v: vec o n) (a1 a2: num)
     : Lemma (vec_scalar_mul (vec_scalar_mul v a1) a2 == vec_scalar_mul v (scalar_mul a1 a2)) =
-      // [SMTPat (vec_scalar_mul (vec_scalar_mul v a1) a2)] =
   match v with
   | Vec1 a -> scalar_mul_assoc a a1 a2
   | VecN v' x ->
@@ -100,6 +112,14 @@ let rec vec_scalar_div (#o: orient) (#n: pos) (v1: vec o n) (a: num{is_nnz a}) :
   match v1 with
   | Vec1 x -> Vec1 (scalar_div x a)
   | VecN v1' x -> VecN (vec_scalar_div v1' a) (scalar_div x a)
+
+let rec vec_scalar_mul_div_comm (#o: orient) (#n: pos) (v: vec o n) (a: num) (l: num{is_nnz l})
+    : Lemma (vec_scalar_mul v (scalar_div a l) == vec_scalar_mul (vec_scalar_div v l) a) =
+  match v with
+  | Vec1 x -> scalar_mul_div_comm x a l
+  | VecN v' x ->
+    vec_scalar_mul_div_comm v' a l;
+    scalar_mul_div_comm x a l
 
 let rec vec_scalar_div_assoc (#o: orient) (#n: pos) (v: vec o n)
       (a1: num{is_nnz a1}) (a2: num{is_nnz a2})
@@ -154,3 +174,4 @@ let rec vec_trans_involutive (#o: orient) (#n: pos) (v: vec o n)
   match v with
   | Vec1 _ -> ()
   | VecN v' _ -> vec_trans_involutive v'
+    
