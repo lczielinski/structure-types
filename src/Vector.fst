@@ -26,10 +26,11 @@ let zero_cvec (#n: pos) : cvec n = zero_vec #Col #n
 let is_zero_vec (#o: orient) (#n: pos) (v: vec o n) : prop = v == zero_vec #o #n
 
 (* add vectors *)
-assume val vec_add (#o: orient) (#n: pos) (v1 v2: vec o n) : v3: vec o n {
-  (is_zero_vec v1 ==> v3 == v2) /\
-  (is_zero_vec v2 ==> v3 == v1)
-}
+let rec vec_add (#o: orient) (#n: pos) (v1 v2: vec o n) : v3: vec o n 
+  {(is_zero_vec v1 ==> v3 == v2) /\ (is_zero_vec v2 ==> v3 == v1)} =
+  match v1 with
+  | Vec1 x -> let Vec1 y = v2 in Vec1 (scalar_add x y)
+  | VecN v1' x -> let VecN v2' y = v2 in VecN (vec_add v1' v2') (scalar_add x y)
 
 (* negate a vector *)
 assume val neg (#o: orient) (#n: pos) (v1: vec o n) : vec o n 
