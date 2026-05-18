@@ -27,14 +27,6 @@ let rec mat_vec_mul_vec_neg (#n: pos) (m: mat n) (c: cvec n)
 assume val mat_vec_mul_scalar (#n: pos) (m: mat n) (c: cvec n) (a: num)
     : Lemma (mat_vec_mul m (vec_scalar_mul c a) == vec_scalar_mul (mat_vec_mul m c) a)
       [SMTPat (mat_vec_mul m (vec_scalar_mul c a))]
-  // match m with
-  // | Mat1 a' ->
-  //   let Vec1 x = c in
-  //   scalar_mul_assoc a' x a
-  // | MatN m' col a' _ ->
-  //   let VecN c' x = c in
-  //   mat_vec_mul_scalar m' c' a;
-  //   scalar_mul_assoc a' x a
 
 assume val mat_vec_mul_div_scalar (#n: pos) (m: mat n) (c: cvec n) (a: num{is_nnz a})
     : Lemma (vec_scalar_mul (mat_vec_mul m (vec_scalar_div c a)) a == mat_vec_mul m c)
@@ -121,10 +113,16 @@ let rec transpose_involutive (#n: pos) (m: mat n)
   | Mat1 _ -> ()
   | MatN m' _ _ _ -> transpose_involutive m'
 
+assume val transpose_augment : #n:pos -> #k:pos{k == n + 1} ->
+  m:mat n -> c:cvec n -> a:num -> b:rvec n ->
+  Lemma (ensures (transpose #k (MatN m c a b)
+                  == MatN #n (transpose m) (vec_trans b) a (vec_trans c)))
+        [SMTPat (transpose #k (MatN m c a b))]
+
 (* symmetry *)
 let symmetric (#n: pos) (m: mat n) : prop = m == transpose m
 
-assume val one_by_one_sym : m:mat 1 -> Lemma (symmetric m) [SMTPat (symmetric m)]
+let one_by_one_sym (m:mat 1) : Lemma (symmetric m) [SMTPat (symmetric m)] = ()
 
 assume val spd_symmetric (#n: pos) (m: mat n)
     : Lemma (requires spd m) (ensures symmetric m) [SMTPat (spd m)]

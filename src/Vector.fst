@@ -154,4 +154,3 @@ let rec vec_trans_involutive (#o: orient) (#n: pos) (v: vec o n)
   match v with
   | Vec1 _ -> ()
   | VecN v' _ -> vec_trans_involutive v'
-    
