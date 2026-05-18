@@ -9,7 +9,21 @@ open Matrix
 let triangular_compat (#n:pos) (m1 m2:mat n) : prop =
   (lower m1 /\ lower m2) \/ (upper m1 /\ upper m2)
 
-assume val mat_mul : #n:pos -> mat n -> mat n -> mat n
+let rec mat_mul (#n: pos) (m1 m2: mat n) : r: mat n 
+  {(lower m1 /\ lower m2 ==> lower r) /\
+    (upper m1 /\ upper m2 ==> upper r) /\
+    (triangular_compat m1 m2 /\ unit_diag m1 /\ unit_diag m2 ==> unit_diag r) /\
+    (triangular_compat m1 m2 /\ pos_diag m1 /\ pos_diag m2 ==> pos_diag r) /\
+    (triangular_compat m1 m2 /\ nnz_diag m1 /\ nnz_diag m2 ==> nnz_diag r) /\
+    (identity m1 ==> r == m2) /\ (identity m2 ==> r == m1)} =
+  match m1 with
+  | Mat1 a -> let Mat1 b = m2 in Mat1 (scalar_mul a b)
+  | MatN m1' c1 a1 b1 ->
+    let MatN m2' c2 a2 b2 = m2 in
+    MatN (mat_add (outer_prod c1 b2) (mat_mul m1' m2'))
+      (vec_add (vec_scalar_mul c1 a2) (mat_vec_mul m1' c2))
+      (scalar_add (scalar_mul a1 a2) (inner_prod b1 c2))
+      (vec_add (vec_scalar_mul b2 a1) (vec_mat_mul b1 m2'))
 
 assume val mat_mul_lower : #n:pos -> m1:mat n -> m2:mat n ->
   Lemma (requires lower m1 /\ lower m2)
@@ -78,12 +92,12 @@ assume val mat_mul_inv_cancel : #n:pos -> a:mat n -> b:mat n -> c:mat n -> m:mat
         (ensures mat_mul (mat_mul a b) (mat_mul c m) == mat_mul a m)
         [SMTPat (mat_mul (mat_mul a b) (mat_mul c m))]
 
-assume val mul_augment_new : #n:pos -> #k:pos{k == n + 1} ->
-  m1:mat n -> c1:cvec n -> a1:num -> b1:rvec n ->
-  m2:mat n -> c2:cvec n -> a2:num -> b2:rvec n ->
-  Lemma (ensures mat_mul #k (MatN m1 c1 a1 b1) (MatN m2 c2 a2 b2)
-              == MatN #n (mat_add (outer_prod c1 b2) (mat_mul m1 m2))
+let mul_augment (#n:pos)
+  (m1:mat n) (c1:cvec n) (a1:num) (b1:rvec n)
+  (m2:mat n) (c2:cvec n) (a2:num) (b2:rvec n) :
+  Lemma (ensures mat_mul (MatN m1 c1 a1 b1) (MatN m2 c2 a2 b2)
+              == MatN (mat_add (outer_prod c1 b2) (mat_mul m1 m2))
                          (vec_add (vec_scalar_mul c1 a2) (mat_vec_mul m1 c2))
                          (scalar_add (scalar_mul a1 a2) (inner_prod b1 c2))
                          (vec_add (vec_scalar_mul b2 a1) (vec_mat_mul b1 m2)))
-        [SMTPat (mat_mul #k (MatN m1 c1 a1 b1) (MatN m2 c2 a2 b2))]
+        [SMTPat (mat_mul (MatN m1 c1 a1 b1) (MatN m2 c2 a2 b2))] = ()

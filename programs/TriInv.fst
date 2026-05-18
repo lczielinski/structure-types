@@ -19,7 +19,6 @@ let rec triangular_inv (#n:pos) (l:mat n{unit_lower l}) :
     let b' = neg (mat_vec_mul l'_inv c) in
     let r = MatN l'_inv b' one zero_rvec in
     // assert (unit_lower r);
-    // mul_augment_new l' c a b l'_inv b' one zero_rvec;
     // assert (mat_mul l r == MatN (mat_add (outer_prod c zero_rvec) (mat_mul l' l'_inv))
     //                      (vec_add (vec_scalar_mul c one) (mat_vec_mul l' b'))
     //                      (scalar_add (scalar_mul a one) (inner_prod b b'))
