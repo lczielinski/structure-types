@@ -57,7 +57,6 @@ assume val mat_mul_perm : #n:pos -> m1:mat n -> m2:mat n ->
 
 assume val mat_mul_assoc : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n ->
   Lemma (mat_mul (mat_mul m1 m2) m3 == mat_mul m1 (mat_mul m2 m3))
-  [SMTPat (mat_mul (mat_mul m1 (transpose m2)) m3)]
 
 assume val mat_mul_sub_distr : #n:pos -> m:mat n -> m1:mat n -> m2:mat n ->
   Lemma (mat_mul m (mat_sub m1 m2) == mat_sub (mat_mul m m1) (mat_mul m m2))
@@ -73,6 +72,11 @@ assume val transpose_perm : #n:pos -> m:mat n ->
                  mat_mul m (transpose m) == _id_mat /\
                  mat_mul (transpose m) m == _id_mat)
         [SMTPat (perm m)]
+
+assume val mat_mul_inv_cancel : #n:pos -> a:mat n -> b:mat n -> c:mat n -> m:mat n ->
+  Lemma (requires mat_mul b c == _id_mat)
+        (ensures mat_mul (mat_mul a b) (mat_mul c m) == mat_mul a m)
+        [SMTPat (mat_mul (mat_mul a b) (mat_mul c m))]
 
 assume val mul_augment_new : #n:pos -> #k:pos{k == n + 1} ->
   m1:mat n -> c1:cvec n -> a1:num -> b1:rvec n ->
