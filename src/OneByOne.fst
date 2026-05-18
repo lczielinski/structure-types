@@ -7,7 +7,7 @@ open Matrix
 open MatMul
 
 assume val one_by_one_is_identity : m:mat 1 ->
-  Lemma (requires unit_diag m) (ensures identity m)
+  Lemma (requires unit_diag m) (ensures is_id m)
         [SMTPat (unit_diag (m <: mat 1))]
 
 assume val one_by_one_lower : m:mat 1 -> Lemma (lower m) [SMTPat (lower m)]

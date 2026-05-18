@@ -15,7 +15,7 @@ let rec mat_mul (#n: pos) (m1 m2: mat n) : r: mat n
     (triangular_compat m1 m2 /\ unit_diag m1 /\ unit_diag m2 ==> unit_diag r) /\
     (triangular_compat m1 m2 /\ pos_diag m1 /\ pos_diag m2 ==> pos_diag r) /\
     (triangular_compat m1 m2 /\ nnz_diag m1 /\ nnz_diag m2 ==> nnz_diag r) /\
-    (identity m1 ==> r == m2) /\ (identity m2 ==> r == m1)} =
+    (is_id m1 ==> r == m2) /\ (is_id m2 ==> r == m1)} =
   match m1 with
   | Mat1 a -> let Mat1 b = m2 in Mat1 (scalar_mul a b)
   | MatN m1' c1 a1 b1 ->
@@ -25,37 +25,6 @@ let rec mat_mul (#n: pos) (m1 m2: mat n) : r: mat n
       (scalar_add (scalar_mul a1 a2) (inner_prod b1 c2))
       (vec_add (vec_scalar_mul b2 a1) (vec_mat_mul b1 m2'))
 
-assume val mat_mul_lower : #n:pos -> m1:mat n -> m2:mat n ->
-  Lemma (requires lower m1 /\ lower m2)
-        (ensures lower (mat_mul m1 m2))
-        [SMTPat (lower (mat_mul m1 m2))]
-
-assume val mat_mul_upper : #n:pos -> m1:mat n -> m2:mat n ->
-  Lemma (requires upper m1 /\ upper m2)
-        (ensures upper (mat_mul m1 m2))
-        [SMTPat (upper (mat_mul m1 m2))]
-
-assume val mat_mul_unit_diag : #n:pos -> m1:mat n -> m2:mat n ->
-  Lemma (requires triangular_compat m1 m2 /\ unit_diag m1 /\ unit_diag m2)
-        (ensures unit_diag (mat_mul m1 m2))
-        [SMTPat (unit_diag (mat_mul m1 m2))]
-
-assume val mat_mul_pos_diag : #n:pos -> m1:mat n -> m2:mat n ->
-  Lemma (requires triangular_compat m1 m2 /\ pos_diag m1 /\ pos_diag m2)
-        (ensures pos_diag (mat_mul m1 m2))
-        [SMTPat (pos_diag (mat_mul m1 m2))]
-
-assume val mat_mul_nnz_diag : #n:pos -> m1:mat n -> m2:mat n ->
-  Lemma (requires triangular_compat m1 m2 /\ nnz_diag m1 /\ nnz_diag m2)
-        (ensures nnz_diag (mat_mul m1 m2))
-        [SMTPat (nnz_diag (mat_mul m1 m2))]
-
-assume val mat_mul_id_l : #n:pos -> m:mat n ->
-  Lemma (mat_mul _id_mat m == m) [SMTPat (mat_mul _id_mat m)]
-
-assume val mat_mul_id_r : #n:pos -> m:mat n ->
-  Lemma (mat_mul m _id_mat == m) [SMTPat (mat_mul m _id_mat)]
-
 (* mul associates *)
 assume val mat_vec_mul_assoc : #n:pos -> m1:mat n -> m2:mat n -> c:cvec n ->
   Lemma (ensures mat_vec_mul (mat_mul m1 m2) c == mat_vec_mul m1 (mat_vec_mul m2 c))
@@ -63,7 +32,7 @@ assume val mat_vec_mul_assoc : #n:pos -> m1:mat n -> m2:mat n -> c:cvec n ->
 
 (* inverses *)
 let is_inverse (#n:pos) (l r:mat n) : prop =
-  (mat_mul r l == _id_mat) /\ (mat_mul l r == _id_mat)
+  (mat_mul r l == id_mat) /\ (mat_mul l r == id_mat)
 
 assume val mat_mul_perm : #n:pos -> m1:mat n -> m2:mat n ->
   Lemma (requires perm m1 /\ perm m2) (ensures perm (mat_mul m1 m2))
@@ -83,12 +52,12 @@ assume val mat_mul_outer_prod : #n:pos -> m:mat n -> c:cvec n -> r:rvec n ->
 assume val transpose_perm : #n:pos -> m:mat n ->
   Lemma (requires perm m)
         (ensures perm (transpose m) /\
-                 mat_mul m (transpose m) == _id_mat /\
-                 mat_mul (transpose m) m == _id_mat)
+                 mat_mul m (transpose m) == id_mat /\
+                 mat_mul (transpose m) m == id_mat)
         [SMTPat (perm m)]
 
 assume val mat_mul_inv_cancel : #n:pos -> a:mat n -> b:mat n -> c:mat n -> m:mat n ->
-  Lemma (requires mat_mul b c == _id_mat)
+  Lemma (requires mat_mul b c == id_mat)
         (ensures mat_mul (mat_mul a b) (mat_mul c m) == mat_mul a m)
         [SMTPat (mat_mul (mat_mul a b) (mat_mul c m))]
 

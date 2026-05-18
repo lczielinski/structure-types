@@ -6,7 +6,7 @@ let rec lu (#n:pos) (m:mat n{rowsdd m \/ spd m}) :
   l:mat n{unit_lower l} &
   u:mat n{upper u /\ nnz_diag u /\ mat_mul l u == m} =
   match m with
-  | Mat1 _ -> (|_id_mat #1, m|)
+  | Mat1 _ -> (|id_mat #1, m|)
   | MatN d c a b ->
     let s = schur1 d c a b in
     let (|l, u|) = lu s in

@@ -10,7 +10,7 @@ let rec lu_pivoting (#n:pos) (m:mat n{inv m}) :
   p:mat n{perm p} & l:mat n{unit_lower l} &
   u:mat n{upper u /\ nnz_diag u /\ mat_mul p m == mat_mul l u} =
   match m with
-  | Mat1 _ -> (|_id_mat, _id_mat, m|)
+  | Mat1 _ -> (|id_mat, id_mat, m|)
   | MatN mm mb ma mc ->
     let (|p', m'|) = pivot m in
     let (MatN d c a b) = m' in

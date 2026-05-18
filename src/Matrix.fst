@@ -15,11 +15,11 @@ assume val augment_perm (#n: pos) (m: mat n) :
 
 (* matrix-vector mul *)
 assume val mat_vec_mul : #n:pos -> m:mat n -> c1:cvec n -> c2:cvec n{
-  (identity m ==> c1 == c2) /\ (is_zero_vec c1 ==> is_zero_vec c2)
+  (is_id m ==> c1 == c2) /\ (is_zero_vec c1 ==> is_zero_vec c2)
 }
 
 assume val vec_mat_mul : #n:pos -> r1:rvec n -> m:mat n -> r2:rvec n{
-  (identity m ==> r1 == r2) /\ (is_zero_vec r1 ==> is_zero_vec r2)
+  (is_id m ==> r1 == r2) /\ (is_zero_vec r1 ==> is_zero_vec r2)
 }
 
 (* mul by neg vec *)
@@ -34,7 +34,7 @@ assume val mat_vec_mul_scalar : #n:pos -> m:mat n -> c:cvec n -> a:num ->
 
 (* outer product *)
 assume val outer_prod : #n:pos -> c:cvec n -> r:rvec n -> m:mat n{
-  (is_zero_vec c \/ is_zero_vec r) ==> zero_mat m
+  (is_zero_vec c \/ is_zero_vec r) ==> is_zero_mat m
 }
 
 (* outer prod of scalar div *)
@@ -44,7 +44,7 @@ assume val outer_prod_div_comm : #n:pos -> c:cvec n -> b:rvec n -> l:num{is_nnz 
 
 (* adding matrices *)
 assume val mat_add : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n{
-  (zero_mat m1 ==> m2 == m3) /\ (zero_mat m2 ==> m1 == m3)
+  (is_zero_mat m1 ==> m2 == m3) /\ (is_zero_mat m2 ==> m1 == m3)
 }
 
 assume val mat_sub : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n{
