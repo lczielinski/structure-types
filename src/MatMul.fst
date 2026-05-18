@@ -5,8 +5,7 @@ open Vector
 open MatrixType
 open Matrix
 
-(* matrix-matrix mul *)
-let triangular_compat (#n:pos) (m1 m2:mat n) : prop =
+let triangular_compat (#n: pos) (m1 m2: mat n) : prop =
   (lower m1 /\ lower m2) \/ (upper m1 /\ upper m2)
 
 let rec mat_mul (#n: pos) (m1 m2: mat n) : r: mat n 
@@ -34,20 +33,21 @@ assume val mat_vec_mul_assoc : #n:pos -> m1:mat n -> m2:mat n -> c:cvec n ->
 let is_inverse (#n:pos) (l r:mat n) : prop =
   (mat_mul r l == id_mat) /\ (mat_mul l r == id_mat)
 
-assume val mat_mul_perm : #n:pos -> m1:mat n -> m2:mat n ->
-  Lemma (requires perm m1 /\ perm m2) (ensures perm (mat_mul m1 m2))
-  [SMTPat (perm (mat_mul m1 m2))]
+assume val mat_mul_perm (#n: pos) (m1 m2: mat n)
+    : Lemma (requires perm m1 /\ perm m2)
+      (ensures perm (mat_mul m1 m2))
+      [SMTPat (perm (mat_mul m1 m2))]
 
 assume val mat_mul_assoc : #n:pos -> m1:mat n -> m2:mat n -> m3:mat n ->
   Lemma (mat_mul (mat_mul m1 m2) m3 == mat_mul m1 (mat_mul m2 m3))
 
-assume val mat_mul_sub_distr : #n:pos -> m:mat n -> m1:mat n -> m2:mat n ->
-  Lemma (mat_mul m (mat_sub m1 m2) == mat_sub (mat_mul m m1) (mat_mul m m2))
-  [SMTPat (mat_mul m (mat_sub m1 m2))]
+assume val mat_mul_sub_distr (#n: pos) (m m1 m2: mat n)
+    : Lemma (mat_mul m (mat_sub m1 m2) == mat_sub (mat_mul m m1) (mat_mul m m2))
+      [SMTPat (mat_mul m (mat_sub m1 m2))]
 
-assume val mat_mul_outer_prod : #n:pos -> m:mat n -> c:cvec n -> r:rvec n ->
-  Lemma (mat_mul m (outer_prod c r) == outer_prod (mat_vec_mul m c) r)
-  [SMTPat (mat_mul m (outer_prod c r))]
+assume val mat_mul_outer_prod (#n: pos) (m: mat n) (c: cvec n) (r: rvec n)
+    : Lemma (mat_mul m (outer_prod c r) == outer_prod (mat_vec_mul m c) r)
+      [SMTPat (mat_mul m (outer_prod c r))]
 
 assume val transpose_perm : #n:pos -> m:mat n ->
   Lemma (requires perm m)

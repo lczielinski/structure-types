@@ -24,5 +24,7 @@ let rec lu_pivoting (#n:pos) (m:mat n{inv m}) :
     let p_aug = MatN p zero_cvec one zero_rvec in
     let p'' = mat_mul p_aug (transpose p') in
 
+    assert (mat_mul p_aug m' == mat_mul l' u');
+
     (|p'', l', u'|)
 #pop-options

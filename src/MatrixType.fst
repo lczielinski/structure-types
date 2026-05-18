@@ -72,7 +72,7 @@ assume val inv_1x1_nnz_diag (m: mat 1)
     : Lemma (requires inv m) (ensures nnz_diag m) [SMTPat (inv (m <: mat 1))]
 
 (* shorthands *)
-let unit_lower (#n:pos) (m:mat n) : prop = lower m /\ unit_diag m
+let unit_lower (#n: pos) (m: mat n) : prop = lower m /\ unit_diag m
 
 (* identity *)
 let rec id_mat (#n: pos) : m:mat n{diagonal m /\ unit_diag m} =
