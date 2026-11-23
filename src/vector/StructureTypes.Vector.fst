@@ -25,6 +25,9 @@ let rec vec_neg (#n: nat) (v1: vec n) : v2: vec n {vec_is_zero v1 ==> vec_is_zer
   | VNil -> VNil
   | VCons x v1' -> VCons (scalar_neg x) (vec_neg v1')
 
+let vec_sub (#n: nat) (v1 v2: vec n) : vec n =
+  vec_add v1 (vec_neg v2)
+
 let rec vec_scalar_mul (#n: nat) (v1: vec n) (a: num) : v2: vec n
   {(scalar_is_one a ==> v2 == v1) /\ (vec_is_zero v1 ==> vec_is_zero v2) /\ (scalar_is_zero a ==> vec_is_zero v2)} =
   match v1 with

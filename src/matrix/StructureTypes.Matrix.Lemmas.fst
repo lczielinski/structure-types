@@ -242,3 +242,101 @@ let mat_mul_inverse_cancel (#n: nat) (a b c m: mat n)
           [SMTPat (mat_mul (mat_mul a b) (mat_mul c m))] =
   mat_mul_assoc a b (mat_mul c m);
   mat_mul_assoc b c m
+
+let rec mat_add_comm (#n: nat) (m1 m2: mat n) : Lemma (mat_add m1 m2 == mat_add m2 m1) =
+  match m1 with
+  | MNil -> ()
+  | MCons a1 b1 c1 m1' ->
+    let MCons a2 b2 c2 m2' = m2 in
+    mat_add_comm m1' m2';
+    scalar_add_comm a1 a2;
+    vec_add_comm b1 b2;
+    vec_add_comm c1 c2
+
+let rec mat_neg_involutive (#n: nat) (m: mat n)
+  : Lemma (mat_neg (mat_neg m) == m) [SMTPat (mat_neg (mat_neg m))] =
+  match m with
+  | MNil -> ()
+  | MCons _ _ _ m' -> mat_neg_involutive m'
+
+let mat_mul_sub_l (#n: nat) (m1 m2 m: mat n)
+  : Lemma (mat_mul (mat_sub m1 m2) m == mat_sub (mat_mul m1 m) (mat_mul m2 m))
+          [SMTPat (mat_mul (mat_sub m1 m2) m)] =
+  let lhs = mat_mul (mat_sub m1 m2) m in
+  let rhs = mat_sub (mat_mul m1 m) (mat_mul m2 m) in
+  let aux (x: cvec n) : Lemma (mat_vec_mul lhs x == mat_vec_mul rhs x) =
+    mat_vec_mul_assoc (mat_sub m1 m2) m x;
+    mat_vec_mul_add_l m1 (mat_neg m2) (mat_vec_mul m x);
+    mat_vec_mul_neg_l m2 (mat_vec_mul m x);
+    mat_vec_mul_add_l (mat_mul m1 m) (mat_neg (mat_mul m2 m)) x;
+    mat_vec_mul_neg_l (mat_mul m2 m) x;
+    mat_vec_mul_assoc m1 m x;
+    mat_vec_mul_assoc m2 m x
+  in
+  FStar.Classical.forall_intro aux;
+  mat_ext lhs rhs
+
+let vec_outer_vec_mat_mul_r (#n: nat) (c: cvec n) (r: rvec n) (m: mat n)
+  : Lemma (vec_outer c (vec_mat_mul r m) == mat_mul (vec_outer c r) m) =
+  let lhs = vec_outer c (vec_mat_mul r m) in
+  let rhs = mat_mul (vec_outer c r) m in
+  let aux (x: cvec n) : Lemma (mat_vec_mul lhs x == mat_vec_mul rhs x) =
+    mat_vec_mul_vec_outer_l c (vec_mat_mul r m) x;
+    vec_dot_vec_mat_mul_l r m x;
+    mat_vec_mul_assoc (vec_outer c r) m x;
+    mat_vec_mul_vec_outer_l c r (mat_vec_mul m x)
+  in
+  FStar.Classical.forall_intro aux;
+  mat_ext lhs rhs
+
+let vec_outer_neg_r (#n: nat) (c: cvec n) (r: rvec n)
+  : Lemma (vec_outer c (vec_neg r) == mat_neg (vec_outer c r)) =
+  let lhs = vec_outer c (vec_neg r) in
+  let rhs = mat_neg (vec_outer c r) in
+  let aux (x: cvec n) : Lemma (mat_vec_mul lhs x == mat_vec_mul rhs x) =
+    mat_vec_mul_vec_outer_l c (vec_neg r) x;
+    vec_dot_neg_l r x;
+    mat_vec_mul_neg_l (vec_outer c r) x;
+    mat_vec_mul_vec_outer_l c r x
+  in
+  FStar.Classical.forall_intro aux;
+  mat_ext lhs rhs
+
+let vec_outer_neg_l (#n: nat) (c: cvec n) (r: rvec n)
+  : Lemma (vec_outer (vec_neg c) r == mat_neg (vec_outer c r)) =
+  let lhs = vec_outer (vec_neg c) r in
+  let rhs = mat_neg (vec_outer c r) in
+  let aux (x: cvec n) : Lemma (mat_vec_mul lhs x == mat_vec_mul rhs x) =
+    mat_vec_mul_vec_outer_l (vec_neg c) r x;
+    vec_scalar_mul_neg_l c (vec_dot r x);
+    mat_vec_mul_neg_l (vec_outer c r) x;
+    mat_vec_mul_vec_outer_l c r x
+  in
+  FStar.Classical.forall_intro aux;
+  mat_ext lhs rhs
+
+let mat_schur_inverse (#n: nat) (#k: pos{k == n + 1})
+    (a: num{scalar_is_nnz a}) (b: rvec n) (c: cvec n) (d: mat n)
+    (alpha: num) (beta: rvec n) (gamma: cvec n) (delta: mat n)
+  : Lemma (requires mat_is_inverse #k (MCons a b c d) (MCons alpha beta gamma delta))
+          (ensures mat_is_inverse #n (mat_schur #k (MCons a b c d)) delta) =
+  mat_mul_cons #n #k a b c d alpha beta gamma delta;
+  mat_mul_cons #n #k alpha beta gamma delta a b c d;
+  let ca = vec_scalar_div c a in
+  vec_neg_unique (vec_scalar_mul beta a) (vec_mat_mul b delta);
+  vec_scalar_mul_div_cancel beta a;
+  vec_outer_div_comm c (vec_scalar_mul beta a) a;
+  vec_outer_neg_r ca (vec_scalar_mul beta a);
+  vec_outer_vec_mat_mul_r ca b delta;
+  mat_mul_sub_l d (vec_outer ca b) delta;
+  mat_add_comm (mat_mul d delta) (vec_outer c beta);
+  mat_mul_sub_r delta d (vec_outer ca b);
+  mat_mul_vec_outer_r delta ca b;
+  mat_vec_mul_scalar_div_cancel delta c a;
+  vec_scalar_mul_div_cancel (mat_vec_mul delta ca) a;
+  vec_neg_unique (vec_scalar_mul gamma a) (mat_vec_mul delta c);
+  vec_outer_div_comm (mat_vec_mul delta c) b a;
+  vec_outer_neg_l (vec_scalar_mul gamma a) (vec_scalar_div b a);
+  vec_outer_div_comm (vec_scalar_mul gamma a) b a;
+  vec_scalar_mul_div_cancel gamma a;
+  mat_add_comm (mat_mul delta d) (vec_outer gamma b)

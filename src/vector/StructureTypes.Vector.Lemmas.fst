@@ -17,7 +17,8 @@ let rec vec_add_inv_l (#n: nat) (v: vec n)
   | VCons _ v' -> vec_add_inv_l v'
 
 let rec vec_add_sub_cancel (#n: nat) (v1 v2: vec n)
-  : Lemma (vec_add v2 (vec_add v1 (vec_neg v2)) == v1) =
+  : Lemma (vec_add v2 (vec_add v1 (vec_neg v2)) == v1)
+          [SMTPat (vec_add v2 (vec_add v1 (vec_neg v2)))] =
   match v1 with
   | VNil -> ()
   | VCons x v1' ->
@@ -181,3 +182,17 @@ let rec vec_ext (#n: nat) (r1 r2: rvec n)
     in
     FStar.Classical.forall_intro aux;
     vec_ext r1' r2'
+
+let rec vec_neg_unique (#n: nat) (v w: vec n)
+  : Lemma (requires vec_add v w == vec_zero) (ensures w == vec_neg v) =
+  match v with
+  | VNil -> ()
+  | VCons x v' -> let VCons y w' = w in vec_neg_unique v' w'; scalar_neg_unique x y
+
+let rec vec_scalar_mul_div_cancel (#n: nat) (v: vec n) (a: num{scalar_is_nnz a})
+  : Lemma (vec_scalar_div (vec_scalar_mul v a) a == v) =
+  match v with
+  | VNil -> ()
+  | VCons x v' ->
+    vec_scalar_mul_div_cancel v' a;
+    scalar_mul_cancel_r (scalar_div (scalar_mul x a) a) x a
