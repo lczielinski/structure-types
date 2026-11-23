@@ -1,6 +1,6 @@
 module LU
 
-open All
+open StructureTypes.All
 
 let rec lu (#n:pos) (m:mat n{rowsdd m \/ spd m}) :
   l:mat n{unit_lower l} &

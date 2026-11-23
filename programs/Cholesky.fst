@@ -1,6 +1,6 @@
 module Cholesky
 
-open All
+open StructureTypes.All
 
 let rec cholesky (#n:pos) (m:mat n{spd m}) :
   l:mat n{lower l /\ pos_diag l /\ mat_mul l (transpose l) == m} =

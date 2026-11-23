@@ -1,0 +1,7 @@
+module StructureTypes.All
+
+include StructureTypes.MatMul
+include StructureTypes.Matrix
+include StructureTypes.MatrixType
+include StructureTypes.Scalar
+include StructureTypes.Vector

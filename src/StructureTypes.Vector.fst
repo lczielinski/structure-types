@@ -1,6 +1,6 @@
-module Vector
+module StructureTypes.Vector
 
-open Scalar
+open StructureTypes.Scalar
 
 type orient = | Row | Col
 let flip (o: orient) : orient = match o with | Row -> Col | Col -> Row
@@ -175,3 +175,103 @@ let rec vec_trans_involutive (#o: orient) (#n: pos) (v: vec o n)
   | Vec1 _ -> ()
   | VecN v' _ -> vec_trans_involutive v'
     
+(*** Algebraic laws, proved pointwise from the scalar axioms. ***)
+
+let rec vec_add_comm (#o: orient) (#n: pos) (v1 v2: vec o n)
+    : Lemma (vec_add v1 v2 == vec_add v2 v1) =
+  match v1 with
+  | Vec1 x -> let Vec1 y = v2 in scalar_add_comm x y
+  | VecN v1' x -> let VecN v2' y = v2 in vec_add_comm v1' v2'; scalar_add_comm x y
+
+let rec vec_add_assoc (#o: orient) (#n: pos) (v1 v2 v3: vec o n)
+    : Lemma (vec_add (vec_add v1 v2) v3 == vec_add v1 (vec_add v2 v3)) =
+  match v1 with
+  | Vec1 x -> let Vec1 y = v2 in let Vec1 z = v3 in scalar_add_assoc x y z
+  | VecN v1' x ->
+    let VecN v2' y = v2 in
+    let VecN v3' z = v3 in
+    vec_add_assoc v1' v2' v3';
+    scalar_add_assoc x y z
+
+(* (a+b)+(c+d) == (a+c)+(b+d) *)
+let rec vec_add_middle_swap (#o: orient) (#n: pos) (a b c d: vec o n)
+    : Lemma (vec_add (vec_add a b) (vec_add c d) == vec_add (vec_add a c) (vec_add b d)) =
+  match a with
+  | Vec1 x ->
+    let Vec1 y = b in let Vec1 z = c in let Vec1 w = d in
+    scalar_add_middle_swap x y z w
+  | VecN a' x ->
+    let VecN b' y = b in let VecN c' z = c in let VecN d' w = d in
+    vec_add_middle_swap a' b' c' d';
+    scalar_add_middle_swap x y z w
+
+let rec vec_scalar_mul_add_scalar (#o: orient) (#n: pos) (v: vec o n) (a b: num)
+    : Lemma (vec_scalar_mul v (scalar_add a b) == vec_add (vec_scalar_mul v a) (vec_scalar_mul v b)) =
+  match v with
+  | Vec1 x -> scalar_mul_add_dist_l x a b
+  | VecN v' x -> vec_scalar_mul_add_scalar v' a b; scalar_mul_add_dist_l x a b
+
+let rec vec_scalar_mul_neg_v (#o: orient) (#n: pos) (v: vec o n) (a: num)
+    : Lemma (vec_scalar_mul (vec_neg v) a == vec_neg (vec_scalar_mul v a)) =
+  match v with
+  | Vec1 x -> scalar_mul_neg_l x a
+  | VecN v' x -> vec_scalar_mul_neg_v v' a; scalar_mul_neg_l x a
+
+let rec inner_prod_add_r (#n: pos) (r: rvec n) (c1 c2: cvec n)
+    : Lemma (inner_prod r (vec_add c1 c2) == scalar_add (inner_prod r c1) (inner_prod r c2)) =
+  match r with
+  | Vec1 x -> let Vec1 y1 = c1 in let Vec1 y2 = c2 in scalar_mul_add_dist_l x y1 y2
+  | VecN r' x ->
+    let VecN u1 y1 = c1 in
+    let VecN u2 y2 = c2 in
+    inner_prod_add_r r' u1 u2;
+    scalar_mul_add_dist_l x y1 y2;
+    scalar_add_middle_swap (inner_prod r' u1) (inner_prod r' u2) (scalar_mul x y1) (scalar_mul x y2)
+
+let rec inner_prod_add_l (#n: pos) (r1 r2: rvec n) (c: cvec n)
+    : Lemma (inner_prod (vec_add r1 r2) c == scalar_add (inner_prod r1 c) (inner_prod r2 c)) =
+  match c with
+  | Vec1 y -> let Vec1 x1 = r1 in let Vec1 x2 = r2 in ()
+  | VecN c' y ->
+    let VecN r1' x1 = r1 in
+    let VecN r2' x2 = r2 in
+    inner_prod_add_l r1' r2' c';
+    scalar_add_middle_swap (inner_prod r1' c') (inner_prod r2' c') (scalar_mul x1 y) (scalar_mul x2 y)
+
+let rec inner_prod_scalar_l (#n: pos) (r: rvec n) (c: cvec n) (a: num)
+    : Lemma (inner_prod (vec_scalar_mul r a) c == scalar_mul (inner_prod r c) a) =
+  match r with
+  | Vec1 x -> let Vec1 y = c in scalar_mul_swap_r x a y
+  | VecN r' x ->
+    let VecN c' y = c in
+    inner_prod_scalar_l r' c' a;
+    scalar_mul_swap_r x a y
+
+let rec inner_prod_neg_l (#n: pos) (r: rvec n) (c: cvec n)
+    : Lemma (inner_prod (vec_neg r) c == scalar_neg (inner_prod r c)) =
+  match r with
+  | Vec1 x -> let Vec1 y = c in scalar_mul_neg_l x y
+  | VecN r' x ->
+    let VecN c' y = c in
+    inner_prod_neg_l r' c';
+    scalar_mul_neg_l x y
+
+(* Two row vectors with the same inner product against every column are equal. *)
+let rec rvec_ext (#n: pos) (r1 r2: rvec n)
+    : Lemma (requires forall (c: cvec n). inner_prod r1 c == inner_prod r2 c)
+            (ensures r1 == r2) =
+  match r1 with
+  | Vec1 x ->
+    let Vec1 y = r2 in
+    let e : cvec n = Vec1 one in
+    assert (inner_prod r1 e == inner_prod r2 e)
+  | VecN #_ #m r1' x ->
+    let VecN r2' y = r2 in
+    let e : cvec n = VecN (zero_cvec #m) one in
+    assert (inner_prod r1 e == inner_prod r2 e);
+    let aux (c': cvec m) : Lemma (inner_prod r1' c' == inner_prod r2' c') =
+      let c : cvec n = VecN c' zero in
+      assert (inner_prod r1 c == inner_prod r2 c)
+    in
+    FStar.Classical.forall_intro aux;
+    rvec_ext r1' r2'

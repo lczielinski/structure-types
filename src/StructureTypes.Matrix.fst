@@ -1,8 +1,8 @@
-module Matrix
+module StructureTypes.Matrix
 
-open Scalar
-open Vector
-open MatrixType
+open StructureTypes.Scalar
+open StructureTypes.Vector
+open StructureTypes.MatrixType
 
 (* matrix-vector mul *)
 let rec mat_vec_mul (#n: pos) (m: mat n) (c1: cvec n) : c2: cvec n 
@@ -153,3 +153,115 @@ let one_by_one_sym (m:mat 1) : Lemma (symmetric m) [SMTPat (symmetric m)] = ()
 
 assume val spd_symmetric (#n: pos) (m: mat n)
     : Lemma (requires spd m) (ensures symmetric m) [SMTPat (spd m)]
+
+(*** Linearity of matrix-vector multiplication, and extensionality. ***)
+
+let rec mat_vec_mul_add_vec (#n: pos) (m: mat n) (c1 c2: cvec n)
+    : Lemma (mat_vec_mul m (vec_add c1 c2) == vec_add (mat_vec_mul m c1) (mat_vec_mul m c2)) =
+  match m with
+  | Mat1 a -> let Vec1 x1 = c1 in let Vec1 x2 = c2 in scalar_mul_add_dist_l a x1 x2
+  | MatN m' c a b ->
+    let VecN u1 x1 = c1 in
+    let VecN u2 x2 = c2 in
+    mat_vec_mul_add_vec m' u1 u2;
+    vec_scalar_mul_add_scalar c x1 x2;
+    vec_add_middle_swap (mat_vec_mul m' u1) (mat_vec_mul m' u2) (vec_scalar_mul c x1) (vec_scalar_mul c x2);
+    inner_prod_add_r b u1 u2;
+    scalar_mul_add_dist_l a x1 x2;
+    scalar_add_middle_swap (inner_prod b u1) (inner_prod b u2) (scalar_mul a x1) (scalar_mul a x2)
+
+let rec mat_vec_mul_scalar (#n: pos) (m: mat n) (c: cvec n) (s: num)
+    : Lemma (mat_vec_mul m (vec_scalar_mul c s) == vec_scalar_mul (mat_vec_mul m c) s) =
+  match m with
+  | Mat1 a -> let Vec1 x = c in scalar_mul_assoc a x s
+  | MatN m' col a b ->
+    let VecN u x = c in
+    mat_vec_mul_scalar m' u s;
+    vec_scalar_mul_assoc col x s;
+    vec_scalar_mul_add_dist (mat_vec_mul m' u) (vec_scalar_mul col x) s;
+    inner_prod_scalar_r b u s;
+    scalar_mul_assoc a x s
+
+let rec mat_vec_mul_add_mat (#n: pos) (m1 m2: mat n) (c: cvec n)
+    : Lemma (mat_vec_mul (mat_add m1 m2) c == vec_add (mat_vec_mul m1 c) (mat_vec_mul m2 c)) =
+  match m1 with
+  | Mat1 a1 -> let Mat1 a2 = m2 in let Vec1 x = c in ()
+  | MatN m1' c1 a1 b1 ->
+    let MatN m2' c2 a2 b2 = m2 in
+    let VecN u x = c in
+    mat_vec_mul_add_mat m1' m2' u;
+    vec_add_middle_swap (mat_vec_mul m1' u) (mat_vec_mul m2' u) (vec_scalar_mul c1 x) (vec_scalar_mul c2 x);
+    inner_prod_add_l b1 b2 u;
+    scalar_add_middle_swap (inner_prod b1 u) (inner_prod b2 u) (scalar_mul a1 x) (scalar_mul a2 x)
+
+let rec mat_vec_mul_neg_mat (#n: pos) (m: mat n) (c: cvec n)
+    : Lemma (mat_vec_mul (mat_neg m) c == vec_neg (mat_vec_mul m c)) =
+  match m with
+  | Mat1 a -> let Vec1 x = c in scalar_mul_neg_l a x
+  | MatN m' col a b ->
+    let VecN u x = c in
+    mat_vec_mul_neg_mat m' u;
+    vec_scalar_mul_neg_v col x;
+    inner_prod_neg_l b u;
+    scalar_mul_neg_l a x
+
+(* (c r) x == c (r . x) *)
+let rec mat_vec_mul_outer (#n: pos) (c: cvec n) (r: rvec n) (x: cvec n)
+    : Lemma (mat_vec_mul (outer_prod c r) x == vec_scalar_mul c (inner_prod r x)) =
+  match c with
+  | Vec1 p -> let Vec1 q = r in let Vec1 y = x in scalar_mul_assoc p q y
+  | VecN c' p ->
+    let VecN r' q = r in
+    let VecN x' y = x in
+    mat_vec_mul_outer c' r' x';
+    vec_scalar_mul_assoc c' q y;
+    vec_scalar_mul_add_scalar c' (inner_prod r' x') (scalar_mul q y);
+    inner_prod_scalar_l r' x' p;
+    scalar_mul_comm (inner_prod r' x') p;
+    scalar_mul_assoc p q y;
+    scalar_mul_add_dist_l p (inner_prod r' x') (scalar_mul q y)
+
+(* (r m) . c == r . (m c) *)
+let rec inner_vec_mat_mul (#n: pos) (r: rvec n) (m: mat n) (c: cvec n)
+    : Lemma (inner_prod (vec_mat_mul r m) c == inner_prod r (mat_vec_mul m c)) =
+  match m with
+  | Mat1 a -> let Vec1 s = r in let Vec1 x = c in scalar_mul_assoc s a x
+  | MatN m' col a b ->
+    let VecN r' s = r in
+    let VecN u x = c in
+    inner_vec_mat_mul r' m' u;
+    // (r m) . c
+    inner_prod_add_l (vec_mat_mul r' m') (vec_scalar_mul b s) u;
+    inner_prod_scalar_l b u s;
+    scalar_mul_add_dist_r (inner_prod r' col) (scalar_mul s a) x;
+    // r . (m c)
+    inner_prod_add_r r' (mat_vec_mul m' u) (vec_scalar_mul col x);
+    inner_prod_scalar_r r' col x;
+    scalar_mul_add_dist_l s (inner_prod b u) (scalar_mul a x);
+    scalar_mul_comm (inner_prod b u) s;
+    scalar_mul_assoc s a x;
+    scalar_add_middle_swap
+      (inner_prod r' (mat_vec_mul m' u)) (scalar_mul (inner_prod b u) s)
+      (scalar_mul (inner_prod r' col) x) (scalar_mul (scalar_mul s a) x)
+
+(* Two matrices that agree on every vector are equal. *)
+let rec mat_ext (#n: pos) (m1 m2: mat n)
+    : Lemma (requires forall (c: cvec n). mat_vec_mul m1 c == mat_vec_mul m2 c)
+            (ensures m1 == m2) =
+  match m1 with
+  | Mat1 a ->
+    let Mat1 b = m2 in
+    let e : cvec n = Vec1 one in
+    assert (mat_vec_mul m1 e == mat_vec_mul m2 e)
+  | MatN #k m1' c1 a1 b1 ->
+    let MatN m2' c2 a2 b2 = m2 in
+    let e : cvec n = VecN (zero_cvec #k) one in
+    assert (mat_vec_mul m1 e == mat_vec_mul m2 e);
+    let aux (c': cvec k)
+        : Lemma (mat_vec_mul m1' c' == mat_vec_mul m2' c' /\ inner_prod b1 c' == inner_prod b2 c') =
+      let c : cvec n = VecN c' zero in
+      assert (mat_vec_mul m1 c == mat_vec_mul m2 c)
+    in
+    FStar.Classical.forall_intro aux;
+    mat_ext m1' m2';
+    rvec_ext b1 b2

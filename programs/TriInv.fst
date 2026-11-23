@@ -1,8 +1,9 @@
 module TriInv
 
-open All
+open StructureTypes.All
 
 (* triangular inverse function *)
+#push-options "--z3rlimit 20"
 let rec triangular_inv (#n:pos) (l:mat n{unit_lower l}) :
   r:mat n{unit_lower r /\ is_inverse l r} =
   match l with 
@@ -10,4 +11,5 @@ let rec triangular_inv (#n:pos) (l:mat n{unit_lower l}) :
   | MatN l' c a b ->
     let l'_inv = triangular_inv l' in
     let b' = vec_neg (mat_vec_mul l'_inv c) in
-    MatN l'_inv b' one zero_rvec 
+    MatN l'_inv b' one zero_rvec
+#pop-options

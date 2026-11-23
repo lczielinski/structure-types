@@ -1,6 +1,6 @@
 module Solve
 
-open All
+open StructureTypes.All
 open TriInv
 
 let solve (#n:pos) (l:mat n{unit_lower l}) (b:cvec n) :

@@ -1,11 +1,10 @@
 module LUPivot
 
-open All
+open StructureTypes.All
 
 assume val pivot : #n:pos{n >= 2} -> m:mat n{inv m} ->
   p':mat n{perm p'} & m':mat n{inv m' /\ top_left_nnz m' /\ mat_mul p' m' == m}
 
-#push-options "--split_queries always"
 let rec lu_pivoting (#n:pos) (m:mat n{inv m}) :
   p:mat n{perm p} & l:mat n{unit_lower l} &
   u:mat n{upper u /\ nnz_diag u /\ mat_mul p m == mat_mul l u} =
@@ -25,4 +24,3 @@ let rec lu_pivoting (#n:pos) (m:mat n{inv m}) :
     let p'' = mat_mul p_aug (transpose p') in
 
     (|p'', l', u'|)
-#pop-options

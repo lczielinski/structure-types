@@ -1,6 +1,6 @@
 module GramSchmidt
 
-open All
+open StructureTypes.All
 
 noeq type rect : pos -> pos -> Type = 
   | Rect1 : #n:pos -> cvec n -> rect n 1

@@ -1,7 +1,7 @@
-module MatrixType
+module StructureTypes.MatrixType
 
-open Scalar
-open Vector
+open StructureTypes.Scalar
+open StructureTypes.Vector
 
 (* square matrices *)
 noeq type mat : pos -> Type =
