@@ -2,15 +2,15 @@ module LU
 
 open StructureTypes.All
 
-let rec lu (#n:pos) (m:mat n{rowsdd m \/ spd m}) :
+let rec lu (#n:nat) (m:mat n{rowsdd m \/ spd m}) :
   l:mat n{unit_lower l} &
   u:mat n{upper u /\ nnz_diag u /\ mat_mul l u == m} =
   match m with
-  | Mat1 _ -> (|id_mat #1, m|)
-  | MatN _ c a b ->
+  | MNil -> (|MNil, MNil|)
+  | MCons a b c _ ->
     let s = schur1 m in
     let (|l, u|) = lu s in
     let lc = vec_scalar_div c a in
-    let l' = MatN l lc one zero_rvec in
-    let u' = MatN u zero_cvec a b in
+    let l' = MCons one zero_vec lc l in
+    let u' = MCons a b zero_vec u in
     (|l', u'|)

@@ -6,10 +6,10 @@ noeq type rect : pos -> pos -> Type =
   | Rect1 : #n:pos -> cvec n -> rect n 1
   | RectK : #n:pos -> #k:pos -> rect n k -> cvec n -> rect n (k + 1)
 
-assume val nnz_vec  (#n:pos) (#o:orient) (v:vec o n) : prop
-assume val unit_vec (#n:pos) (#o:orient) (v:vec o n) : prop
+assume val nnz_vec  (#n:pos) (v:vec n) : prop
+assume val unit_vec (#n:pos) (v:vec n) : prop
 
-assume val unit_vec_nnz (#n:pos) (#o:orient) (v:vec o n) :
+assume val unit_vec_nnz (#n:pos) (v:vec n) :
     Lemma (requires unit_vec v) (ensures nnz_vec v) [SMTPat (nnz_vec v)]
 
 (* v is linearly independent of the columns of m *)
@@ -99,7 +99,7 @@ let rec gramschmidt_r (#n:pos) (#k:pos) (m:rect n k{linind m}) :
   match m with 
   | Rect1 v -> 
     let q = Rect1 (normalize v) in 
-    let r = Mat1 (norm v) in 
+    let r = MCons (norm v) VNil VNil MNil in 
     (q, r)
   | RectK m' v -> 
     // assert mat_vec_ind m' v;

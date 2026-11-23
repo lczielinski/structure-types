@@ -1,3 +1,12 @@
 {
-  "options": ["--include", "src", "--include", "programs"]
+  "options": [
+    "--include", "src",
+    "--include", "src/scalar",
+    "--include", "src/vector",
+    "--include", "src/matrix",
+    "--include", "src/structure",
+    "--include", "programs",
+    "--z3version", "4.13.3",
+    "--fuel", "2", "--ifuel", "1"
+  ]
 }
