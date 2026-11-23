@@ -68,6 +68,10 @@ let scalar_mul_div_cancel (a: num{scalar_is_nnz a}) (b: num)
   : Lemma (scalar_mul a (scalar_div b a) == b) [SMTPat (scalar_mul a (scalar_div b a))] =
   scalar_mul_comm a (scalar_div b a)
 
+let scalar_sub_add_cancel (a b: num)
+  : Lemma (scalar_add (scalar_sub a b) b == a) [SMTPat (scalar_add (scalar_sub a b) b)] =
+  scalar_add_assoc a (scalar_neg b) b
+
 let scalar_mul_div_comm (a b: num) (l: num{scalar_is_nnz l})
     : Lemma (scalar_mul a (scalar_div b l) == scalar_mul (scalar_div a l) b) =
   let al = scalar_div a l in
