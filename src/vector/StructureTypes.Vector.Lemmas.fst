@@ -196,3 +196,8 @@ let rec vec_scalar_mul_div_cancel (#n: nat) (v: vec n) (a: num{scalar_is_nnz a})
   | VCons x v' ->
     vec_scalar_mul_div_cancel v' a;
     scalar_mul_cancel_r (scalar_div (scalar_mul x a) a) x a
+
+let rec vec_dot_comm (#n: nat) (u v: vec n) : Lemma (vec_dot u v == vec_dot v u) =
+  match u with
+  | VNil -> ()
+  | VCons x u' -> let VCons y v' = v in vec_dot_comm u' v'; scalar_mul_comm x y

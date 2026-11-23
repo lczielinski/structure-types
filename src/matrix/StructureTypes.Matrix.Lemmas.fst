@@ -340,3 +340,21 @@ let mat_schur_inverse (#n: nat) (#k: pos{k == n + 1})
   vec_outer_div_comm (vec_scalar_mul gamma a) b a;
   vec_scalar_mul_div_cancel gamma a;
   mat_add_comm (mat_mul delta d) (vec_outer gamma b)
+
+let rec mat_transpose_add (#n: nat) (m1 m2: mat n)
+  : Lemma (mat_transpose (mat_add m1 m2) == mat_add (mat_transpose m1) (mat_transpose m2)) =
+  match m1 with
+  | MNil -> ()
+  | MCons _ _ _ m1' -> let MCons _ _ _ m2' = m2 in mat_transpose_add m1' m2'
+
+let rec mat_transpose_neg (#n: nat) (m: mat n)
+  : Lemma (mat_transpose (mat_neg m) == mat_neg (mat_transpose m)) =
+  match m with
+  | MNil -> ()
+  | MCons _ _ _ m' -> mat_transpose_neg m'
+
+let rec mat_transpose_vec_outer (#n: nat) (c: cvec n) (r: rvec n)
+  : Lemma (mat_transpose (vec_outer c r) == vec_outer r c) =
+  match c with
+  | VNil -> ()
+  | VCons x c' -> let VCons y r' = r in mat_transpose_vec_outer c' r'; scalar_mul_comm x y
